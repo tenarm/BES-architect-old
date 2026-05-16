@@ -1,0 +1,5 @@
+cd /Users/bvk/BVK_Workspace/BES_NEW/bes-backend
+
+ source .venv/bin/activate
+
+pdm run uvicorn instances.acme_corp.acme_corp.main:app --reload
