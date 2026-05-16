@@ -1,129 +1,130 @@
 ---
 name: feature-plan-reviewer
-description: This skill instructs the AI assistant to perform a comprehensive architectural and security review of a feature's frontend and backend plans.
+description: "LIFECYCLE STEP 3: Review frontend.md + backend.md for a feature, enforce the Golden Rules, and generate changes.md (the consolidated implementation spec)."
 ---
 
 # Skill: Feature Plan Reviewer
+**Lifecycle Position: STEP 3 of 6 — Audit**
+**Reads from:** `frontend.md` + `backend.md` (outputs of Steps 1 & 2)
+**Feeds into:** `master-implementation-architect` (Step 4) and `feature-implementation-orchestrator` (Step 5)
 
-This skill instructs the AI assistant to act as a BES Solutions Architect and perform a thorough review of a single feature's plans (`frontend.md` + `backend.md`) in `features-plan/<module>/<feature>/`. It checks completeness, architectural adherence, security compliance, and cross-doc compatibility — then generates a `changes.md` specification.
+This skill is the quality gate. It enforces all 10 BES Golden Rules, checks cross-doc compatibility, validates completeness, and generates the consolidated `changes.md` — the definitive implementation spec for developers.
 
 ---
 
-## About the BES Architecture (Reviewer Context)
+## Lifecycle Context
+```
+STEP 1: frontend-generate-feature-doc  →  frontend.md
+STEP 2: backend-generate-feature-doc   →  backend.md
+[YOU ARE HERE]
+STEP 3: feature-plan-reviewer          →  changes.md  ← QUALITY GATE
+STEP 4: master-implementation-architect →  master-implementation-roadmap.md
+STEP 5: feature-implementation-orchestrator → CODE
+STEP 6: post-implementation-documenter →  implementation-manual.md
+```
 
-**Golden Rules to enforce:**
-1. **BESBase**: Every table inherits it. Gets `id` (UUID), `created_at`, `updated_at`, `created_by`, `is_deleted`, `subsidiary_id`, `metadata_` (JSONB).
+---
+
+## The 10 BES Golden Rules (Enforce ALL)
+1. **BESBase**: Every table inherits it → `id` (UUID), `created_at`, `updated_at`, `created_by`, `is_deleted`, `subsidiary_id`, `metadata_` (JSONB).
 2. **Money Rule**: `Numeric(20,4)` in DB, `Decimal` in Python, `decimal.js`/`big.js` in React. NEVER `float`.
-3. **Soft Deletes**: `is_deleted = True`. Physical deletion is FORBIDDEN.
-4. **Layering**: `models.py` → DB only. `schemas.py` → API I/O only. `services.py` → business logic. `router.py` → thin HTTP. `events.py` → bus.
+3. **Soft Deletes**: `is_deleted = True`. Physical deletion FORBIDDEN.
+4. **Layering**: `models.py` → DB only. `schemas.py` → API I/O. `services.py` → business logic. `router.py` → thin HTTP. `events.py` → bus.
 5. **Response Envelope**: `{ "status", "data", "metadata", "error" }` always.
-6. **Pagination**: All list endpoints use `PaginationParams`.
-7. **RBAC**: All write/sensitive endpoints use `require_permission("<module>:<resource>:<action>")`.
-8. **Hub-and-Spoke MDM**: Master data in `core` schema. Module tables reference via FK or `metadata_` Ghost FK.
-9. **Event Bus**: Async emit/subscribe. Events are UPPER_SNAKE_CASE. Safe if subscriber not loaded.
-10. **Licensing**: UI degrades gracefully for `READONLY_EXTENSIONS` modules.
+6. **Pagination**: `PaginationParams` on all list endpoints.
+7. **RBAC**: `require_permission("<module>:<resource>:<action>")` on all write/sensitive endpoints.
+8. **Hub-and-Spoke MDM**: Master data in `core` schema. Module tables FK to core.
+9. **Event Bus**: Async emit/subscribe. UPPER_SNAKE_CASE. No direct cross-module imports.
+10. **Licensing**: UI degrades gracefully for `READONLY_EXTENSIONS`. Backend disables write endpoints.
 
 ---
 
 ## Instructions for the Assistant
 
-When the user asks to "review the feature plan" for a specific feature:
+When the user asks to "review the feature plan" for `features-plan/<module>/<feature>/`:
 
-1. Navigate to `features-plan/<module>/<feature>/`.
-2. Read `frontend.md` and `backend.md`.
-3. Enforce all Golden Rules below.
-4. Generate the review report as a response, then write `changes.md`.
+1. Read `frontend.md` and `backend.md`.
+2. Run all review criteria below.
+3. Output the review report as a response.
+4. Write `changes.md` to `features-plan/<module>/<feature>/changes.md`.
 
 ---
 
 ## Review Criteria
 
 ### A. Plan Completeness
+**Frontend doc must have all 14 sections**: Module, Name, Description, Depends On, UI Details, Sample Data, Required APIs, Database Tables, Events, Business Rules, Security/RBAC, Process Transparency, Implementation Roadmap, Verification & QA.
 
-**Frontend doc must contain all 14 sections:**
-- Module, Name, Description, Depends On, UI Details, Sample Data, Required APIs, Database Tables, Events, Business Rules, Security/RBAC, Process Transparency, Implementation Roadmap, Verification & QA.
-
-**Backend doc must contain all 10 sections:**
-- Module Overview, File Structure, Data Models, Pydantic Schemas, Business Logic, API Routes, Events, Manifest, RBAC & Permissions, Audit & Compliance.
-
-Flag any sections that are missing, vague, or incomplete.
+**Backend doc must have all 10 sections**: Module Overview, File Structure, Data Models, Pydantic Schemas, Business Logic, API Routes, Events, Manifest, RBAC & Permissions, Implementation Roadmap.
 
 ### B. Architectural Adherence
 - All tables inherit `BESBase`?
-- `subsidiary_id` present on all tables?
-- Table names follow `<module>_<entity_plural>` convention?
-- Core master data (customers, vendors, products, uoms) referenced correctly via Hub-and-Spoke?
-- Layering rules obeyed (no business logic in router)?
+- `subsidiary_id` on every table?
+- Table names follow `<module>_<entity_plural>`?
+- Hub-and-Spoke MDM correctly applied?
+- Strict layer separation observed?
 
 ### C. Backend & Data Integrity
-- Money Rule enforced (`Numeric(20,4)` in DB, `Decimal` in code)?
+- Money Rule enforced (`Numeric(20,4)` + `Decimal`)?
 - All list endpoints have pagination?
 - All responses use `StandardResponse` envelope?
 - Soft-delete filter on all queries?
-- `*Create` schemas used for all inputs (no ORM model as input)?
+- `*Create` schemas used for all inputs (not ORM models)?
 
 ### D. Security & RBAC
-- `require_permission()` specified for all write/sensitive endpoints?
-- Permission string format correct: `<module>:<resource>:<action>`?
+- `require_permission()` on all write/sensitive endpoints?
+- Permission string format `<module>:<resource>:<action>` correct?
 - Permissions registered in `admin_permissions.json`?
-- `READONLY_EXTENSIONS` behavior documented in frontend?
-- Context-aware RBAC noted where `elevate_context()` is needed?
+- `READONLY_EXTENSIONS` behavior documented in both docs?
 
-### E. Event & Licensing Compatibility
-- Event names unique and in UPPER_SNAKE_CASE?
-- Emitted events in backend match events listed in frontend for SSE updates?
-- Bootstrap endpoint usage documented where needed?
-
-### F. Frontend ↔ Backend Compatibility
-- API routes in `frontend.md` (Section 7) match routes planned in `backend.md` (Section 6)?
-- Request/response payload shapes align between frontend sample data (Section 6) and backend schemas (Section 4)?
-- Events emitted in backend (Section 7) match events frontend listens to (Section 9)?
+### E. Frontend ↔ Backend Compatibility
+- Routes in `frontend.md` Section 7 match routes in `backend.md` Section 6?
+- Payload schemas in `frontend.md` Section 6 align with `backend.md` Section 4?
+- Events emitted in `backend.md` match events subscribed in `frontend.md`?
 
 ---
 
-## Output: Review Report (as response)
+## Output 1: Review Report (as response)
 
-## 1. Executive Summary
-Overall verdict: `APPROVED` / `NEEDS REVISION` / `CRITICAL GAPS`.
+### Executive Summary: `APPROVED` / `NEEDS REVISION` / `CRITICAL GAPS`
 
-## 2. Completeness Scorecard
-A table rating each section of frontend and backend docs (Complete / Partial / Missing).
+### Completeness Scorecard
+Table rating each section (Complete / Partial / Missing).
 
-## 3. Findings
+### Findings
+- ✅ Architectural Strengths
+- ❌ Critical Violations (blocks implementation)
+- ⚠️ Compatibility Gaps
+- 💡 Recommendations
 
-### ✅ Architectural Strengths
-
-### ❌ Critical Violations (blocks implementation)
-
-### ⚠️ Compatibility Gaps (frontend ↔ backend misalignments)
-
-### 💡 Recommendations
-
-## 4. Final Verdict
-- **Status**: [APPROVED / REJECT / PENDING]
-- **Blocking Issues**: List any issues that must be fixed before implementation.
+### Final Verdict: `APPROVED` / `REJECT` / `PENDING`
 
 ---
 
-## Change Document Generation
+## Output 2: changes.md (ALWAYS write this file)
+**Path**: `features-plan/<module>/<feature>/changes.md`
 
-After the review, ALWAYS write a `changes.md` file at `features-plan/<module>/<feature>/changes.md`.
-
-This is the implementation specification for developers:
+This is the implementation spec for the `feature-implementation-orchestrator`.
 
 ### 1. Impacted Backend Files
-Table listing each file (`models.py`, `schemas.py`, etc.), change type (`[NEW]`/`[MODIFY]`), and implementation notes.
+Table: file path | change type (`[NEW]`/`[MODIFY]`) | implementation notes.
 
 ### 2. Impacted Frontend Files
-Table listing Nx library path, page components, shell registration files, and any new `@bes/shared-ui` components needed.
+Table: Nx path | change type | `@bes/shared-ui` components needed | shell registration files.
 
 ### 3. Integration Checklist
-- **Database**: Migration command (e.g., `SQLModel.metadata.create_all()` or Alembic).
-- **Permissions**: Exact keys to add to `admin_permissions.json`.
-- **Bootstrap**: Confirm permissions surfaced via `GET /api/v1/bootstrap`.
-- **Events**: Payload examples for Pub/Sub smoke-testing.
-- **Licensing**: Readonly mode verification steps.
+- Database: migration command.
+- Permissions: exact keys for `admin_permissions.json`.
+- Bootstrap: confirm permissions in `GET /api/v1/bootstrap`.
+- Events: payload examples for smoke-testing.
+- Licensing: readonly mode verification steps.
 
 ### 4. Implementation Order
-Prioritized task list following dependency order:
-`Core Master Data → Backend Models → Schemas → Services → APIs (with RBAC) → Event Handlers → Manifest → Frontend Library → Shell Registration → UI Components → SSE Integration → QA`.
+`Core Master Data → Backend Models → Schemas → Services → APIs (RBAC) → Events → Manifest → Frontend Library → Shell Registration → UI Components → SSE Integration → QA`
+
+---
+
+### Execution Rules
+- **Output files**: `changes.md` in `features-plan/<module>/<feature>/`
+- **Module-level context**: Optionally read `module-cross-features-changes.md` to check for shared services.
+- **Next step**: Run `4-module-architect-reviewer` (if whole-module audit needed) OR go straight to `master-implementation-architect` (Step 4).

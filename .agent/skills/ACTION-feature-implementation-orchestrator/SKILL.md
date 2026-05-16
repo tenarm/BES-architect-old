@@ -1,53 +1,130 @@
 ---
 name: feature-implementation-orchestrator
-description: This skill instructs the AI assistant to read a consolidated changes.md file and execute the end-to-end implementation of a feature.
+description: "LIFECYCLE STEP 5: Read the master-implementation-roadmap.md and execute the end-to-end implementation of a feature using the full context pyramid."
 ---
 
 # Skill: Feature Implementation Orchestrator
+**Lifecycle Position: STEP 5 of 6 — Build**
+**Reads from:**
+- `features-plan/master-implementation-roadmap.md` (from Step 4c) — determines WHICH feature to build and in what order.
+- `features-plan/project-readiness-report.md` (from Step 4b) — enforces global Golden Rules.
+- `features-plan/<module>/module-cross-features-changes.md` (from Step 4a) — shared services & dependencies.
+- `features-plan/<module>/<feature>/changes.md` (from Step 3) — the implementation spec.
+- `features-plan/<module>/<feature>/frontend.md` + `backend.md` (from Steps 1 & 2) — domain nuances.
 
-This skill instructs the AI assistant to take a `changes.md` (Consolidated Technical Specification) and execute the actual implementation across the backend and frontend, following the prescribed architectural order.
+**Triggers:** `util-create-extension`, `util-create-ui-module`, `util-add-api-endpoint` (sub-routines)
+**Feeds into:** `post-implementation-documenter` (Step 6)
+
+This is the execution engine. It takes the context pyramid and builds the actual code in the correct architectural order.
+
+---
+
+## Lifecycle Context
+```
+STEP 1: frontend-generate-feature-doc  →  frontend.md
+STEP 2: backend-generate-feature-doc   →  backend.md
+STEP 3: feature-plan-reviewer          →  changes.md
+STEP 4a: module-architect-reviewer     →  module-cross-features-changes.md
+STEP 4b: project-readiness-auditor     →  project-readiness-report.md
+STEP 4c: master-implementation-architect →  master-implementation-roadmap.md
+[YOU ARE HERE]
+STEP 5: feature-implementation-orchestrator → CODE
+STEP 6: post-implementation-documenter →  implementation-manual.md
+```
 
 ---
 
 ## Instructions for the Assistant
 
-When the user asks you to "implement the feature" for a specific path:
+When the user asks to "implement the feature" for a specific step in the roadmap:
 
-### 1. Full-Context Preparation & Validation
-- Navigate to the feature folder: `features-plan/<module>/<feature>/`.
-- **Read the Full Context Pyramid**:
-    1. **Project Level**: Read `features-plan/project-readiness-report.md` to understand global architectural mandates (The Golden Rules).
-    2. **Module Level**: Read `features-plan/<module>/module-cross-features-changes.md` to identify shared services, logic, or dependencies that must be respected.
-    3. **Technical Specs**: Read `features-plan/<module>/<feature>/changes.md` for the consolidated roadmap.
-    4. **Feature Details**: Review the original `frontend.md` and `backend.md` to ensure no subtle business rules or UI nuances were lost during consolidation.
-- **Cross-Reference**: If you find any contradictions between the docs, prioritize the `project-readiness-report.md` (Architecture) followed by `changes.md` (Execution).
-- **Environment Check**:
-    - Verify that the target module extension exists in `bes-backend/extensions/`. If not, you must use the `create-extension` skill.
-    - Verify that the target Nx library exists in `bes-frontend/libs/`. If not, you must use the `create-ui-module` skill.
+### 1. Full Context Preparation
+Read the Context Pyramid in this order:
+1. `features-plan/master-implementation-roadmap.md` — find the current Step N, its status, source docs, and skill to use.
+2. `features-plan/project-readiness-report.md` — confirm Golden Rules and global architectural constraints.
+3. `features-plan/<module>/module-cross-features-changes.md` — identify shared services, event catalog, and whether a shared base was planned first.
+4. `features-plan/<module>/<feature>/changes.md` — the implementation spec (backend files, frontend files, integration checklist, implementation order).
+5. `features-plan/<module>/<feature>/frontend.md` + `backend.md` — recover any nuanced business rules or UI details not captured in `changes.md`.
 
-### 2. Execution Phase (Following the Roadmap)
+**If contradictions exist**: Architecture (project-readiness-report) > Execution (changes.md) > Details (frontend/backend md).
 
-Follow the **"Implementation Order"** defined in Section 4 of `changes.md`. You MUST NOT skip steps.
+### 2. Environment Check
+- Does `bes-backend/extensions/<module>/` exist? If NO → use `util-create-extension`.
+- Does `bes-frontend/libs/<module>/` exist? If NO → use `util-create-ui-module`.
+- Is this adding to an existing extension? → use `util-add-api-endpoint` for new routes.
 
-#### Step A: Backend Foundation
-1. **Models**: Update `models.py`. Ensure `BESBase` inheritance and "The Money Rule" (Decimal precision).
-2. **Schemas**: Update `schemas.py` with `*Create`, `*Update`, and `*Read` models.
-3. **Services**: Implement the business logic in `services.py`. Ensure transaction safety and `subsidiary_id` awareness.
-4. **Router**: Implement the FastAPI routes in `router.py`. Apply `require_permission` and `StandardResponse` envelopes.
-5. **Events**: Implement emitters and subscribers in `events.py`.
-6. **Manifest**: Ensure the feature is registered in `manifest.py`.
+### 3. Backend Implementation (Section 4 of `changes.md`)
+In strict order — DO NOT skip steps:
 
-#### Step B: Security & Configuration
-1. **Permissions**: Add the new permission keys to `core/core/admin_permissions.json`.
-2. **Bootstrap**: Verify that the backend returns these permissions in the `/bootstrap` endpoint.
+1. **Models** (`models.py`):
+   - Inherit `BESBase`. Confirm `subsidiary_id`, `metadata_`, `is_deleted`.
+   - Apply Money Rule: `Column(Numeric(precision=20, scale=4))` for all financial fields.
+
+2. **Schemas** (`schemas.py`):
+   - `*Create`: No `id`, `created_at`, `is_deleted`, `subsidiary_id`.
+   - `*Update`: All fields Optional.
+   - `*Read`: Full output including computed fields.
+
+3. **Services** (`services.py`):
+   - Business logic only. No HTTP. No response wrapping.
+   - Transaction safety: single `AsyncSession` commit per operation.
+   - Soft delete: `is_deleted = True`. NEVER delete from DB.
+   - Money Rule: `Decimal` for all arithmetic.
+
+4. **Router** (`router.py`):
+   - Thin layer. Call service, return response. No logic.
+   - ALL list endpoints: add `PaginationParams` dependency.
+   - ALL write/sensitive endpoints: add `require_permission("<module>:<resource>:<action>")`.
+   - ALL responses: use `success_response()` or `paginated_response()`.
+
+5. **Events** (`events.py`):
+   - Emitters: `UPPER_SNAKE_CASE` event type. Full payload.
+   - Subscribers: registered via `event_bus.subscribe()`.
+
+6. **Manifest** (`manifest.py`):
+   - Register router, models, event handlers.
+
+7. **Permissions** (`admin_permissions.json`):
+   - Add `<module>:<resource>:<action>` keys.
+   - Verify in `GET /api/v1/bootstrap` response.
+
+### 4. Frontend Implementation (Section 4 of `changes.md`)
 
 #### Step C: Frontend Implementation
-1. **Component Development**: Build the UI components in the module's Nx library using `@bes/shared-ui`.
-2. **Registry**: Register the components in the module's `index.ts` using `ComponentRegistry.registerLazy()`.
-3. **Shell Integration**: Register the module in the Shell's `main.tsx` and `app-config.tsx`.
+1. **Component Inventory & Promotion Logic**: Identify all required UI components from `frontend.md`.
+   - **Strict Promotion Rule**: ONLY promote a component to `@bes/shared-ui` if it is a **generic primitive** (e.g., custom DatePicker, StatusBadge, DataGrid) that will be reused by at least two other modules.
+   - **Utility Trigger**: If a missing component meets the "Strict Promotion Rule", use `util-create-shared-component` to expand the shared library first.
+   - **Module-Specific UI**: All feature-specific layouts, dashboards, and domain-heavy components MUST be built locally in `bes-frontend/libs/<module>/src/lib/<feature>/` or `src/lib/components/`.
+2. **Component Development**: Build the UI using the expanded `@bes/shared-ui` toolkit.
+   - **Visual Excellence**: Every component built MUST be premium, interactive, and high-fidelity (no placeholders).
+   - **Transactional forms**: Use Drawer with `ProcessPipeline` at top (macro view) + "History" tab with `Timeline` (micro view).
+   - Handle READONLY mode: hide/disable action buttons based on `bootstrap.permissions`.
+3. **Registry**: Register the components in the module's `index.ts` using `ComponentRegistry.registerLazy()`.
+4. **Shell Integration**: Register the module in the Shell's `main.tsx` and `app-config.tsx`.
+   - Add nav item in the sidebar config.
 
-### 3. Verification & Handover
-- Perform the "Integration Checklist" from `changes.md`.
-- Run `GET /health` to ensure the module is loaded.
-- Run `GET /api/v1/<module>/<resource>` to verify the new API.
-- Provide a summary of all files created/modified and any manual steps the user needs to take (e.g., database migrations).
+### 5. Verification
+Execute the Integration Checklist from `changes.md`:
+- `GET /health` — module is loaded.
+- `GET /api/v1/<module>/<resource>` — API returns data.
+- Verify `subsidiary_id` isolation (data from one tenant not visible to another).
+- Verify READONLY mode UI degradation.
+- Verify permissions appear in Bootstrap response.
+- Trigger a key user action and verify the SSE event fires and updates the UI.
+
+### 6. Handover Summary
+Provide a summary report:
+- All files created/modified (with paths).
+- Any deviations from `changes.md` and the reason.
+- Any manual steps needed (e.g., database migrations, env var updates).
+- Confirm: ready for Step 6 (`post-implementation-documenter`).
+
+---
+
+### Utility Sub-Routines (use when needed)
+- **`util-create-extension`**: Scaffold a new backend extension module.
+- **`util-create-ui-module`**: Scaffold a new Nx frontend library.
+- **`util-add-api-endpoint`**: Add a new API route to an existing extension.
+
+### Execution Rules
+- **After completion**: Run `post-implementation-documenter` (Step 6) to close out the feature.

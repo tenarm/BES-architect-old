@@ -1,128 +1,126 @@
 ---
 name: frontend-generate-feature-doc
-description: This skill instructs the AI assistant on how to generate a comprehensive, structured frontend feature documentation markdown file for any upcoming feature in the BES project.
+description: "LIFECYCLE STEP 1: Generate the frontend feature specification document (frontend.md) for a BES feature."
 ---
 
 # Skill: Frontend Generate Feature Doc
+**Lifecycle Position: STEP 1 of 6 — Requirement**
+**Feeds into:** `2-backend-generate-feature-doc`
 
-This skill instructs the AI assistant to generate frontend feature documentation aligned with the BES Factory's Kernel-and-Plugin (Core + Extension) architecture, React Nx Shell UI, and all guiding architectural principles.
+This skill generates the canonical frontend feature specification. Its output (`frontend.md`) is the primary input for the backend planning skill and every downstream review skill.
+
+---
+
+## Lifecycle Context
+```
+[YOU ARE HERE]
+STEP 1: frontend-generate-feature-doc  →  frontend.md
+STEP 2: backend-generate-feature-doc   →  backend.md
+STEP 3: feature-plan-reviewer          →  changes.md
+STEP 4: master-implementation-architect →  master-implementation-roadmap.md
+STEP 5: feature-implementation-orchestrator → CODE
+STEP 6: post-implementation-documenter →  implementation-manual.md
+```
 
 ---
 
 ## About the BES Architecture
-
 - **Stack**: React (Nx Monorepo) frontend, FastAPI (PDM Monorepo) backend, PostgreSQL.
-- **Shell UI**: A single `apps/shell` that dynamically loads licensed module libraries via the `ComponentRegistry`.
-- **Module Libraries**: Each module lives in `bes-frontend/libs/<module>/` and is registered via `init<Module>Module()`.
-- **Shared UI**: All components (Button, Table, Skeleton, Drawer, Timeline, ProcessPipeline) come from `@bes/shared-ui`.
-- **Licensing**: The `/api/v1/bootstrap` endpoint tells the Shell which modules are `active` or `readonly`. UI must degrade gracefully for `READONLY_EXTENSIONS`.
+- **Shell UI**: `apps/shell` dynamically loads licensed module libraries via `ComponentRegistry.registerLazy()`.
+- **Module Libraries**: Each module lives in `bes-frontend/libs/<module>/`, registered via `init<Module>Module()`.
+- **Shared UI**: ALL components come from `@bes/shared-ui` (Table, Drawer, Skeleton, Timeline, ProcessPipeline, etc.).
+- **Licensing**: `GET /api/v1/bootstrap` tells Shell which modules are `active` or `readonly`. UI must degrade gracefully for `READONLY_EXTENSIONS`.
+- **Known Modules**: `core`, `finance`, `sales`, `inventory`, `hr`, `supply-chain`, `crm`, `settings`.
 
 ---
 
 ## Instructions for the Assistant
 
-When the user asks to "frontend generate feature doc" or "create a frontend feature doc," you MUST strictly follow this 14-section structure.
+When the user asks to "frontend generate feature doc":
 
-Before generating, ask the user for any specific details they want included, or if they have source code to analyze first.
-
-**IMPORTANT: File Location**
-Write the generated markdown file into the feature's subfolder:
-Format: `features-plan/<module-name>/<feature-name>/frontend.md`
-Create the `<feature-name>` folder if it does not already exist.
+1. Ask the user for any specific details or source code to analyze first.
+2. Generate the 14-section document below.
+3. Save to `features-plan/<module-name>/<feature-name>/frontend.md`. Create the folder if needed.
 
 ---
 
 ## Required 14-Section Structure
 
 ## 1. Module
-State the parent BES module (e.g., `finance`, `sales`, `inventory`, `hr`, `supply-chain`, `settings`).
+Parent BES module (e.g., `finance`, `sales`, `inventory`, `hr`, `supply-chain`, `settings`).
 
 ## 2. Name
-The official, formalized name of the feature (e.g., "Chart of Accounts Manager").
+Official name of the feature (e.g., "Chart of Accounts Manager").
 
 ## 3. Description
-A detailed explanation of the feature's business purpose and value within the BES system.
+Business purpose and value within the BES system.
 
 ## 4. Depends On
-List cross-module dependencies (e.g., Sales relies on `core` Customers; Supply Chain relies on Inventory Items).
-- **Core Kernel:** State how the Core supports this (e.g., "`BESBase` provides UUID PKs, audit trail, `subsidiary_id`, and `metadata_` JSONB expansion").
-- **Other Dependencies:** List required `@bes/shared-ui` components, other module libraries, or external APIs.
+- **Core Kernel:** How `BESBase`, Event Bus, RBAC, and Bootstrap support this feature.
+- **Cross-Module:** Other BES modules this feature relies on.
+- **UI Libraries:** Required `@bes/shared-ui` components and Nx libs.
 
 ## 5. Feature UI — The UI as Information
 **Feature Name:** [Sub-feature name]
-**Details & UI Information:**
-Describe all UI elements: table columns, form inputs, tree views, interactive states (loading, empty, error).
-
-**User Journey & UX Flow:**
-Step-by-step walkthrough (e.g., "User navigates Finance > COA → Clicks 'New Account' → Fills form in Drawer → Submits → Table refreshes via SSE event").
+**UI Details:** Table columns, form inputs, tree views, empty/loading/error states.
+**User Journey:** Step-by-step UX walkthrough.
 
 ## 6. Sample Data Structure (YAML + JSON)
-Provide a YAML schema then a sample JSON API response payload.
-- **ALWAYS** include `subsidiary_id` (UUID) for multi-org scoping.
-- **ALWAYS** use string-based Decimals for currency (e.g., `"150.0000"`) per the Money Rule (4 d.p.).
-- Include the `metadata_` JSONB field where Ghost Foreign Keys or custom fields are needed.
+- Include `subsidiary_id` (UUID) on all entities.
+- Use string Decimals for currency (e.g., `"150.0000"`) — Money Rule (4 d.p.).
+- Include `metadata_` JSONB field where Ghost Foreign Keys or custom fields apply.
 
 ## 7. Required APIs
-List all RESTful endpoints (GET, POST, PUT, DELETE) needed by the UI.
-- **Response Envelope:** ALL endpoints MUST return:
-  ```json
-  { "status": "success", "data": { ... }, "metadata": { "count": 100, "page": 1 }, "error": null }
-  ```
-- State if the endpoint is consumed by bootstrap (`GET /api/v1/bootstrap`) or SSE stream.
+All RESTful endpoints. **All responses MUST use the envelope:**
+```json
+{ "status": "success", "data": { ... }, "metadata": { "count": 100, "page": 1 }, "error": null }
+```
 
 ## 8. Database Tables & Architecture
-Specify the exact table schema (columns, types, PKs, FKs).
-- **Foundation**: All tables MUST inherit `BESBase` → gets `id` (UUID PK), `created_at`, `updated_at`, `created_by`, `is_deleted`, `subsidiary_id`, `metadata_` (JSONB).
-- **Hub-and-Spoke MDM**:
-  - **Core Hub:** Global master data (`customers`, `vendors`, `products`, `uoms`) lives in the `core` schema. Cross-module extension data uses `metadata_` Ghost Foreign Keys or extension tables (e.g., `sales_customer_details`).
-  - **Module Spoke:** Transactional tables (e.g., `finance_invoices`) live in the module schema but FK to core.
-- **Scoping**: `subsidiary_id` on every table for intra-tenant isolation.
+- **Foundation**: All tables inherit `BESBase` → `id` (UUID PK), `created_at`, `updated_at`, `created_by`, `is_deleted`, `subsidiary_id`, `metadata_` (JSONB).
+- **Hub-and-Spoke MDM**: Master data (`customers`, `vendors`, `products`, `uoms`) in `core` schema. Module tables FK to core. Extension tables (e.g., `sales_customer_details`) for module-specific fields.
 - **Precision**: `Numeric(20,4)` for all financial columns.
-- **File Storage**: File attachments MUST use the centralized Storage Service (no BLOB columns in tables).
-- **UOM**: Reference the `core.uoms` registry for all unit-of-measure values.
+- **File Storage**: Centralized Storage Service (no BLOB columns).
 
 ## 9. Events & Real-Time Updates (Pub/Sub)
-Align with the BES async Event Bus (Day 1: asyncio in-memory; Day 2: persistent outbox/Redis).
-- **Emits:** Events published on user actions (e.g., `FINANCE_ACCOUNT_CREATED`). Use `UPPER_SNAKE_CASE`.
-- **Listens To:** Events this feature reacts to for real-time UI updates (e.g., SSE stream trigger).
-- **Safety Note:** If the subscribing module is not licensed, events expire silently.
+- **Emits**: `UPPER_SNAKE_CASE` events (e.g., `FINANCE_ACCOUNT_CREATED`).
+- **Listens To**: Events triggering SSE UI updates.
 
 ## 10. Business Rules & Validations
-- **Soft Deletes**: Physical deletion is FORBIDDEN. Use `is_deleted = True` exclusively.
-- **Money Rule**: 4 decimal places enforced on backend (`Numeric(20,4)`) and frontend (`decimal.js`/`big.js`).
-- Hierarchy depth limits, referential integrity, and other domain-specific constraints.
+- Soft Deletes: `is_deleted = True`. Physical deletion is FORBIDDEN.
+- Money Rule: 4 d.p. on backend and frontend (`decimal.js`/`big.js`).
+- Domain-specific constraints (hierarchy depth, referential integrity, etc.).
 
 ## 11. Security, Audit, and RBAC
 - **Permission Format**: `<module>:<resource>:<action>` (e.g., `finance:coa:write`).
-- **Context-Aware RBAC**: Distinguish between `manual` (user-initiated) and `auto_trigger` (system-initiated via Permission Elevation / `elevate_context()`).
-- **Licensing Mode**: Define exact UI degradation for `READONLY_EXTENSIONS` (e.g., hide action buttons, disable forms, show read-only badge).
-- **Bootstrap**: State which permissions flow through `GET /api/v1/bootstrap` to the Shell.
-- **Audit Trail**: List actions to log: `user_id`, `timestamp`, `previous_state`, `new_state`.
+- **Context-Aware RBAC**: `manual` (user) vs. `auto_trigger` (system via `elevate_context()`).
+- **Licensing Mode**: Exact UI degradation for `READONLY_EXTENSIONS`.
+- **Audit Trail**: Actions to log (`user_id`, `timestamp`, `previous_state`, `new_state`).
 
 ## 12. Process Transparency & Workflow Pipeline
-- **Pending Pipeline (Home Dashboard):** Does this feature surface actionable items (pending approvals, drafts) on the Home page pipeline?
-- **Right Panel (Drawer) UX Pattern:**
-  - **Macro View (`ProcessPipeline`):** Horizontal status tracker at the **top of the Drawer** (e.g., Draft → Pending Approval → Posted). Also serves as inline approval action center.
-  - **Micro View (`Timeline`):** Vertical activity feed in a **secondary "History" tab** within the Drawer. Shows 5W audit data (Who, What, When, Where, Why) without cluttering the form.
-- **Shell Navigation:** Where does this feature appear in the sidebar? What is the breadcrumb path?
+- **Home Dashboard Pipeline**: Does this feature surface pending items (approvals, drafts)?
+- **Right Panel (Drawer) UX**:
+  - **Macro View (`ProcessPipeline`)**: Horizontal tracker at top of Drawer (e.g., Draft → Pending → Approved).
+  - **Micro View (`Timeline`)**: Vertical activity feed in a "History" secondary tab.
+- **Shell Navigation**: Sidebar placement and breadcrumb path.
 
 ## 13. Technical Implementation Roadmap (Day 1)
-- **Phase 1: Backend Foundation** — `BESBase` models, `SQLModel.metadata.create_all()` auto-migration.
-- **Phase 2: Core Logic & APIs** — Service layer, REST endpoints with pagination and RBAC.
-- **Phase 3: Frontend Infrastructure** — Nx library generation, `ComponentRegistry.registerLazy()`, Shell registration in `main.tsx` and `app-config.tsx`.
-- **Phase 4: UI Development** — Screens built with `@bes/shared-ui`, Drawer pattern, SSE state updates.
-- **Phase 5: Event Integration** — Pub/Sub logic, real-time UI refresh.
+- **Phase 1**: `BESBase` models + `SQLModel.metadata.create_all()`.
+- **Phase 2**: Service layer + REST endpoints (pagination + RBAC).
+- **Phase 3**: Nx library + `ComponentRegistry.registerLazy()` + Shell registration.
+- **Phase 4**: UI with `@bes/shared-ui` + SSE state updates.
+- **Phase 5**: Pub/Sub event wiring.
 
 ## 14. Verification & QA Strategy
-- **Subsidiary Isolation:** Verify data is filtered by `subsidiary_id` across tenants.
-- **Money Rule Check:** Verify 4-decimal rounding on all financial inputs.
-- **Licensing Check:** Verify UI degrades correctly under `READONLY_EXTENSIONS`.
-- **Bootstrap Validation:** Verify permissions appear correctly in the bootstrap response.
-- **Functional Scenarios:** List 3–5 critical user paths.
-- **Event Integration Test:** Verify Pub/Sub event triggers the expected SSE UI update.
+- Subsidiary isolation check.
+- Money Rule (4-decimal) check.
+- `READONLY_EXTENSIONS` UI degradation check.
+- Bootstrap permission verification.
+- 3–5 critical user scenarios.
+- Event → SSE UI update integration test.
 
 ---
 
 ### Execution Rules
-- Save to: `features-plan/<module-name>/<feature-name>/frontend.md`
-- Use professional formatting and standard markdown syntax.
+- **Output file**: `features-plan/<module-name>/<feature-name>/frontend.md`
+- **Next step**: Run `2-backend-generate-feature-doc` to generate `backend.md`.

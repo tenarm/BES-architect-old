@@ -1,107 +1,109 @@
 ---
 name: module-architect-reviewer
-description: This skill instructs the AI assistant to perform a module-wide architectural review of all features, identifying gaps, redundancies, and cross-feature dependencies.
+description: "LIFECYCLE STEP 4a (Optional): Perform a module-wide architectural review across all features, find shared logic and cross-feature dependencies, and generate module-cross-features-changes.md."
 ---
 
 # Skill: Module Architect Reviewer
+**Lifecycle Position: STEP 4a of 6 — Module Audit (Optional but Recommended)**
+**Reads from:** All `frontend.md`, `backend.md`, and `changes.md` files within a module (outputs of Steps 1–3).
+**Feeds into:** `master-implementation-architect` (Step 4b)
 
-This skill instructs the AI assistant to act as a BES Solutions Architect and audit an entire module (e.g., all features under `features-plan/finance/`). The goal is to find shared opportunities, data model conflicts, cross-feature dependencies, and create a phased build roadmap.
+This skill zooms out from a single feature and audits the entire module (e.g., all of `features-plan/finance/`). It finds shared logic, data model conflicts, event dependencies, and correct feature build ordering, then produces the `module-cross-features-changes.md` consumed by the Master Architect.
+
+Run this once per module before triggering the Master Implementation Architect.
 
 ---
 
-## About the BES Architecture (Reviewer Context)
+## Lifecycle Context
+```
+STEP 1: frontend-generate-feature-doc  →  frontend.md
+STEP 2: backend-generate-feature-doc   →  backend.md
+STEP 3: feature-plan-reviewer          →  changes.md
+[YOU ARE HERE]
+STEP 4a: module-architect-reviewer     →  module-cross-features-changes.md
+STEP 4b: master-implementation-architect →  master-implementation-roadmap.md
+STEP 5: feature-implementation-orchestrator → CODE
+STEP 6: post-implementation-documenter →  implementation-manual.md
+```
 
-- **Kernel-and-Plugin**: Core Kernel (`bes-backend/core/`) is read-only for extensions. Domain logic lives in `bes-backend/extensions/<module>/`.
-- **Hub-and-Spoke MDM**: Global master data lives in the `core` schema. Module tables are transactional spokes that FK to core.
-- **Event Bus**: The ONLY cross-module communication channel. Modules MUST NOT directly import each other.
-- **Licensing**: Each module is independently toggled via `ACTIVE_EXTENSIONS` / `READONLY_EXTENSIONS`. Plan features to be independently deployable.
-- **Nx Frontend**: Each module has an Nx library (`@bes/<module>`) registered in the Shell via `ComponentRegistry.registerLazy()`.
+---
 
-**Known BES Modules**: `core`, `finance`, `sales`, `inventory`, `hr`, `supply-chain`, `crm`, `settings`.
+## About the BES Architecture (Module Level)
+- **Kernel-and-Plugin**: Extensions MUST NOT import from each other. Only Event Bus for cross-module communication.
+- **Hub-and-Spoke MDM**: Global master data in `core` schema. Module tables as transactional spokes.
+- **Licensing**: Each module toggle independently via `ACTIVE_EXTENSIONS` / `READONLY_EXTENSIONS`.
+- **Nx Frontend**: Each module has an Nx library (`@bes/<module>`) registered in Shell via `ComponentRegistry.registerLazy()`.
+- **Known Modules**: `core`, `finance`, `sales`, `inventory`, `hr`, `supply-chain`, `crm`, `settings`.
 
 ---
 
 ## Instructions for the Assistant
 
-When the user asks to "architect review the <module> module" or "audit all features in <module>," follow these steps:
+When the user asks to "module architect review the <module> module":
 
-### 1. Preparation
-- List all feature subdirectories in `features-plan/<module>/`.
-- For each feature, read both `frontend.md` and `backend.md` (flag missing docs).
-- Read `.agent/rules/architecture.md`, `.agent/rules/backend.md`, `.agent/rules/security.md`.
-
-### 2. Module-Wide Analysis
-
-#### A. Data Model Audit
-- **Table Conflicts**: Do any two features define tables with overlapping names or columns?
-- **Redundant Entities**: Are similar entities defined independently (e.g., `finance_tax_codes` and `finance_tax_rates` both storing tax data)?
-- **Core References**: Are all features correctly reading master data from `core` (customers, vendors, products, uoms) instead of defining their own?
-- **`metadata_` Usage**: Are Ghost Foreign Keys (cross-module soft links via `metadata_` JSONB) used appropriately?
-
-#### B. Service & Logic Reuse
-- **Shared Utilities**: Identify logic that should be a shared `utils.py` within the module (e.g., tax calculation used by both Invoices and POs).
-- **Base Services**: Is there repetitive CRUD logic that can use `core.BaseRepository`?
-- **Transaction Chains**: Multi-feature operations (e.g., Sales Invoice → Finance GL Posting) must be coordinated via the Event Bus, not direct calls.
-
-#### C. API Cohesion
-- **Consistent Routing**: All endpoints under the same module must use the same prefix `/api/v1/<module>`.
-- **Naming Conventions**: Resource paths should follow a consistent pattern (e.g., `/finance/accounts`, `/finance/invoices` — not `/finance/chart-of-accounts`).
-- **RBAC Namespace**: All permissions should use the same module namespace (e.g., `finance:*:*`).
-
-#### D. Event Flow Mapping
-- Build a module-internal event catalog listing all `UPPER_SNAKE_CASE` events emitted and subscribed.
-- Identify any circular event loops (Feature A emits → Feature B subscribes → Feature B emits → Feature A subscribes).
-- Identify events expected from external modules (e.g., Finance listening for `SALES_ORDER_CONFIRMED` from Sales).
-
-#### E. Feature Dependency Graph
-- Identify which features must be built before others (e.g., Chart of Accounts before General Ledger; Vendors before Purchase Invoices).
-- Flag features with no dependencies (can be built in parallel).
-
-#### F. Licensing Independence
-- Can each feature be loaded/unloaded independently via `ACTIVE_EXTENSIONS`?
-- Do features have hard imports between each other (forbidden) vs. Event Bus communication (correct)?
-
-### 3. Output
-
-Write the analysis to: `features-plan/<module>/module-cross-features-changes.md`
+1. List all feature subdirectories in `features-plan/<module>/`.
+2. Read every `frontend.md`, `backend.md`, and `changes.md` within the module.
+3. Read `.agent/rules/architecture.md`, `.agent/rules/backend.md`, `.agent/rules/security.md`.
+4. Perform the analysis below.
+5. Write output to `features-plan/<module>/module-cross-features-changes.md`.
 
 ---
 
-## Module Cross-Features Report Structure
+## Module-Wide Analysis
+
+### A. Feature Inventory
+For each feature: does it have `frontend.md`? `backend.md`? `changes.md`? Clearly flag what is missing.
+
+### B. Data Model Audit
+- Table name conflicts between features?
+- Redundant entities across features (e.g., two features defining a tax table)?
+- All features correctly referencing `core` master data (not defining their own)?
+- Consistent use of `metadata_` Ghost FKs?
+
+### C. Service & Logic Reuse
+- Repeated business logic that should be in a shared `utils.py`?
+- Common CRUD patterns that should use `core.BaseRepository`?
+- Multi-feature transaction chains (e.g., Invoice → GL Posting) that must be event-driven?
+
+### D. API Cohesion
+- All endpoints use the same prefix `/api/v1/<module>`?
+- Consistent resource naming across features?
+- RBAC namespace is `<module>:*:*` consistently?
+
+### E. Internal Event Catalog
+Map all `UPPER_SNAKE_CASE` events emitted and subscribed within the module. Identify circular event loops. Identify events expected from external modules.
+
+### F. Feature Dependency Graph
+Which features must be built before others? Which have no dependencies (can be parallelized)?
+
+---
+
+## Output: `features-plan/<module>/module-cross-features-changes.md`
 
 ## 1. Module Overview
-High-level summary of the module's state, completeness, and architectural maturity.
+High-level architectural maturity assessment.
 
-## 2. Feature Inventory
+## 2. Feature Inventory Table
 
-| Feature | Frontend Doc | Backend Doc | Status |
-|:--------|:-------------|:------------|:-------|
-| `coa`   | ✅ Present  | ✅ Present  | Ready  |
-| `gl`    | ✅ Present  | ❌ Missing  | Incomplete |
+| Feature | frontend.md | backend.md | changes.md | Status |
+|:--------|:-----------|:----------|:----------|:-------|
 
 ## 3. Cross-Feature Findings
+- 🔄 Shared components & services to build once
+- ⚠️ Data model conflicts & redundancies
+- 🔗 Feature dependency graph (build order)
+- ⚡ Internal event catalog
+- 🛑 Golden Rule violations
 
-### 🔄 Shared Components & Services
-List reusable logic, schemas, or UI components to build ONCE for the whole module.
+## 4. Phased Module Build Order
+- **Phase 1: Shared Foundation** — Shared models, utilities, permissions namespace.
+- **Phase 2: Master Data Features** — No intra-module dependencies.
+- **Phase 3: Transactional Features** — Depend on master data or other modules.
+- **Phase 4: Integration & Events** — Cross-module event wiring.
 
-### ⚠️ Data Model Conflicts & Redundancies
-Table naming collisions, duplicate entities, or incorrect master data references.
+---
 
-### 🔗 Feature Dependency Graph
-Ordered list: `Feature A → Feature B → Feature C` (must be built in this order).
-
-### ⚡ Internal Event Catalog
-Full list of events emitted and subscribed within this module, and events expected from external modules.
-
-### 🛑 Architectural Violations
-Any feature-level issues that violate BES Golden Rules.
-
-## 4. Phased Module Implementation Roadmap
-
-- **Phase 1: Shared Foundation** — Shared models, base services, `admin_permissions.json` namespace setup.
-- **Phase 2: Master Data Features** — Independent features with no module dependencies.
-- **Phase 3: Transactional Features** — Features depending on Master Data or other modules.
-- **Phase 4: Integration & Events** — Cross-module event wiring and SSE validation.
-
-## 5. Module Verification Strategy
-How to test this module end-to-end as an integrated system (API smoke tests, event flow, subsidiary isolation, licensing toggle).
+### Execution Rules
+- **Output file**: `features-plan/<module>/module-cross-features-changes.md`
+- **Next step**: Run this for each module, then run `master-implementation-architect` (Step 4b).
+- **Also run**: `5-project-readiness-auditor` for the full cross-module picture.
