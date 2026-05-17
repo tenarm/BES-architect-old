@@ -1,2 +1,20 @@
 bes-backend
 bes-frontend
+
+# frontend
+bes-frontend/node_modules/
+bes-frontend/dist/
+bes-frontend/build/
+bes-frontend/.nx/
+
+# python
+backend/venv/
+bes-backend/__pycache__/
+*.pyc
+
+# misc
+.coverage
+.env
+
+# graphify
+graphify-out/

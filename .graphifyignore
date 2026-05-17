@@ -1,0 +1,53 @@
+# Ignore everything by default
+*
+
+# Allow specific core folders to be indexed
+!bes-backend/
+!bes-backend/**
+!bes-frontend/
+!bes-frontend/**
+!features-plan/
+!features-plan/**
+!bvk-items/
+!bvk-items/**
+
+# Allow specific root files
+!README.md
+!ARCHITECTURE.md
+
+# =========================
+# GLOBAL EXCLUDES
+# =========================
+.git/
+.agents/
+graphify-out/
+.DS_Store
+.env
+.env.*
+node_modules/
+dist/
+build/
+coverage/
+
+# =========================
+# FRONTEND EXCLUDES
+# =========================
+bes-frontend/.nx/
+bes-frontend/.next/
+bes-frontend/.vscode/
+bes-frontend/package-lock.json
+
+# =========================
+# BACKEND EXCLUDES
+# =========================
+bes-backend/.venv/
+bes-backend/venv/
+bes-backend/__pycache__/
+bes-backend/*.pyc
+bes-backend/backend.log
+bes-backend/*.db
+bes-backend/.pdm-python
+bes-backend/.mypy_cache/
+bes-backend/.pytest_cache/
+bes-backend/scratch/
+bes-backend/pdm.lock
