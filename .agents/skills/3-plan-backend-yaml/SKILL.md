@@ -1,0 +1,70 @@
+---
+name: 3-plan-backend-yaml
+description: "PLANNING STEP 3: Create detailed YAML, required APIs, and backend implementation plan."
+---
+
+# Skill: Plan Backend YAML
+**Lifecycle Position: STEP 3 of 6 — Backend Planning**
+**Feeds into:** `4-plan-reviewer`
+
+This skill translates the functionalities and UI flow into a concrete backend schema and API contract.
+
+---
+
+## Lifecycle Context
+```
+STEP 1: 1-plan-functionalities  →  1-functionalities.md
+STEP 2: 2-plan-ui-ux            →  2-ui-ux-flow.md
+[YOU ARE HERE]
+STEP 3: 3-plan-backend-yaml     →  3-backend-plan.md
+STEP 4: 4-plan-reviewer         →  proposed-plan.md & common-dependants.md
+STEP 5: 5a/5b build             →  CODE
+STEP 6: 6-bug-fixing            →  BUG FIXES
+```
+
+---
+
+## About the BES Architecture
+- **Foundation**: All tables inherit `BESBase` → `id` (UUID PK), `created_at`, `updated_at`, `created_by`, `is_deleted`, `subsidiary_id`, `metadata_` (JSONB).
+- **Hub-and-Spoke MDM**: Master data in `core` schema. Module tables FK to core.
+- **Precision**: `Numeric(20,4)` for all financial columns.
+- **API Envelope**: Standard `{ status, data, metadata, error }`.
+- **RBAC Format**: `<module>:<resource>:<action>`.
+
+---
+
+## Instructions for the Assistant
+
+When the user asks to plan backend:
+
+1. Read `1-functionalities.md` and `2-ui-ux-flow.md`.
+2. Generate the 6-section document below.
+3. Save to `features-plan/<module-name>/<feature-name>/3-backend-plan.md`.
+
+---
+
+## Required 6-Section Structure
+
+## 1. Module & Feature Name
+State the module and feature.
+
+## 2. Database Schema (YAML)
+Provide a detailed YAML representation of the database schema including Tables, Columns, Types, and Foreign Keys.
+
+## 3. Hub-and-Spoke MDM Mapping
+Explicitly state how this feature maps to or extends the `core` schema entities.
+
+## 4. REST APIs
+List all required APIs with request/response payloads conforming to the standard API envelope.
+
+## 5. Pub/Sub Events
+Define Event triggers (`UPPER_SNAKE_CASE` Pub/Sub events) to be emitted or listened to.
+
+## 6. RBAC Permissions
+Define the required security roles and `<module>:<resource>:<action>` mapping.
+
+---
+
+### Execution Rules
+- **Output file**: `features-plan/<module-name>/<feature-name>/3-backend-plan.md`
+- **Next step**: Run `4-plan-reviewer`.
