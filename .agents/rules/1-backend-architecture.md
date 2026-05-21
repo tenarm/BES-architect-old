@@ -36,12 +36,37 @@ Every extension MUST follow this structure:
 - **System Context**: Use `elevate_context()` to bypass checks for event-driven automated operations.
 - **Audit**: `X-Request-ID` logging, and `updated_at` auto-updates on modifications.
 
-## 6. Inter-Module Communication
+## 6. Inter-Module & Customization Communication
 - Modules communicate ONLY through the asynchronous **Event Bus** (`core.events`).
-- Modules MUST NOT directly import or call another extension module's code.
+- Standard extension modules MUST NOT directly import or call another extension module's or client-specific instance's code.
 
-## 7. Import Ordering
+## 7. Modular Process Pipeline Definitions
+- **Assessment Requirement**: When specifying or planning new functionalities, you MUST check if a multi-step, approval-driven, or asynchronous process pipeline is required (e.g., employee exit clearance). Direct synchronous changes (e.g., GL entry creation updating the COA) should be distinguished from multi-layered pipelines.
+- **Process Schema Files**: Every extension module that implements standard multi-step processes or pipelines MUST specify them inside `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json`.
+- **Dynamic Aggregation & Self-Healing Filtering**: The core engine (`core/core/processes.py`) dynamically scans all active extension directories for `process_definitions/*.json` on boot, validating their structure against strict **Pydantic** models. 
+  - To handle licensing bounds, any step belonging to an unlicensed module/feature MUST define `requiredModule` or `requiredFeature` in the step schema.
+  - The backend dynamically filters out these unlicensed steps and recursively rewires their dependencies (`dependsOn`) to keep the pipeline intact (Self-Healing).
+- **API Exposing**: Process schemas are exposed to the frontend via the `GET /api/v1/audit/processes` router (filterable by `?module={module_name}`).
+
+## 8. Subscription Packaging & Tier Licensing
+- **Tier Configuration (`core/core/packages.json`)**: Feature scopes are defined under three tiered offerings: **Basic**, **Pro**, and **Premium**.
+- **Granular License Verification**: Service layers and routing endpoints must enforce granular limits using `require_licensed_feature("module", "subfeature")`. 
+- **Enforcement Mechanics**:
+  - In a Web request context, checking failure raises a standard 403 Forbidden `HTTPException`.
+  - In background processes or queue workers, checking failure raises `LicensingError`.
+- **System Bypass**: Privileged background routines and system-initiated event listeners bypass license verification when wrapped in `with elevate_context():`.
+
+## 8. Client Customization & Instance Extension Foundation
+- **Code Separation**: Standard extension modules and the core engine are 100% tenant-agnostic. All client-specific code (custom endpoints, business logic, DB models, integrations) MUST live strictly within `instances/<client_id>/`.
+- **Cli Onboarding & Merging Permissions**:
+  - Clients are provisioned using `scripts/onboard_client.py`.
+  - Private custom client permissions reside in `instances/<client_id>/config/custom_permissions.json` (generated using the interactive CLI `scripts/custom_feature_config.py`). These are merged dynamically into the instance's active `admin_permissions.json` on onboarding.
+- **Dynamic Model Provisioning**: Client-specific models must reside in `instances/<client_id>/<client_id>/models/`. They must be eagerly registered inside the client chassis's `lifespan.py` lifespan context before executing `SQLModel.metadata.create_all` on startup.
+- **Decoupled Business Rules**: Client instances subscribe dynamically to the core event bus (`core.events`) inside `lifespan.py` to trigger custom webhooks or handlers without mutating standard extension packages.
+
+## 9. Import Ordering
 1. Standard library (`os`, `uuid`, `datetime`, `decimal`)
 2. Third-party (`fastapi`, `sqlmodel`)
 3. Core package (`core.database`, `core.responses`)
 4. Current module (`.models`, `.schemas`, `.services`)
+

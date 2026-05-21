@@ -41,6 +41,8 @@ When asked to build the frontend:
 4. Scaffold or modify the required React libraries and components in `bes-frontend/libs/<module>/`.
 5. Integrate with the backend APIs.
 6. Register the newly created views into the Shell's `ComponentRegistry`.
+7. Wire up process loading: ensure module navigation routes hook into `loadModuleProcesses` dynamically to populate `sessionStorage`.
+8. Delegate layering to `@bes/shared-ui` components. Do not hardcode or override `z-index` values in local component styles.
 
 ---
 

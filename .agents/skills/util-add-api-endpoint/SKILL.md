@@ -132,7 +132,26 @@ async def create_new_entity(
     ...
 ```
 
-### Step 5: Add Event Emission (if cross-module)
+### Step 5: Add Feature-Level Licensing Checks
+
+Always assert feature eligibility to enforce subscription packaging tier restrictions:
+
+```python
+from core.licensing import require_licensed_feature
+
+@router.post("/new-entities")
+async def create_new_entity(
+    data: NewEntityCreate,
+    session: AsyncSession = Depends(get_async_session)
+):
+    # Enforce granular subscription tier licensing check
+    require_licensed_feature("<module>", "<subfeature>")
+    
+    item = await do_business_operation(session, data)
+    return success_response(data=item)
+```
+
+### Step 6: Add Event Emission (if cross-module)
 
 If this action should notify other modules:
 
@@ -144,7 +163,7 @@ from .events import emit_entity_created
 await emit_entity_created(str(db_obj.id), db_obj.name)
 ```
 
-### Step 6: Verify
+### Step 7: Verify
 
 ```bash
 # Test with curl or the Swagger docs at http://localhost:8000/docs
@@ -160,4 +179,6 @@ curl -X GET http://localhost:8000/api/v1/<module>/new-entities \
 - [ ] `StandardResponse` envelope (`success_response` / `paginated_response`)
 - [ ] Soft-delete filtering (`.where(Model.is_deleted == False)`)
 - [ ] RBAC protection if needed
+- [ ] Granular feature-level licensing checked via `require_licensed_feature`
 - [ ] Event emission if cross-module impact
+

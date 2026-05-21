@@ -51,3 +51,6 @@ bes-backend/.mypy_cache/
 bes-backend/.pytest_cache/
 bes-backend/scratch/
 bes-backend/pdm.lock
+*.egg-info
+*.egg-info/
+**/process_definitions/*.json

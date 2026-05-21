@@ -6,7 +6,7 @@ description: "PLANNING UTILITY: Update existing feature plans with newly request
 # Skill: Update Feature Plan
 **Lifecycle Position: UTILITY — Plan Iteration**
 
-This skill is invoked when the Owner identifies missed features or requests new functionalities after the initial plans have been generated. It intelligently merges the new requirements into the existing 4-step planning documents.
+This skill is invoked when the Owner identifies missed features, requests new functionalities, or decides to **remove/modify** features after the initial planning documents have been generated. It intelligently propagates the changes (additions, removals, or restructures) through the 4-step planning documents.
 
 ---
 
@@ -22,30 +22,32 @@ Feeds into: 5a-frontend-build & 5b-backend-build (with updated plans)
 
 ## About the BES Architecture
 - You must enforce the core rules defined in `.agents/rules/1-backend-architecture.md` and `2-frontend-architecture.md`.
-- Ensure new features properly utilize `BESBase`, the standard API envelope, Hub-and-Spoke MDM, and `@bes/shared-ui`.
+- Ensure new or modified features properly utilize `BESBase`, standard API envelopes, licensing guards, and `@bes/shared-ui`.
+- If a feature is removed or tier-limited, ensure the UI lock 🔒 and upgrade overlay requirements are integrated into the UI plan.
 
 ---
 
 ## Instructions for the Assistant
 
-When the owner asks to update a plan with a new feature:
+When the owner asks to add, remove, or modify functionalities in an existing plan:
 
-1. Identify the target module and feature, and precisely what new functionality the owner wants to add.
+1. Identify the target module and feature, and precisely what functionalities the owner wants to **add, remove, or modify**.
 2. Read the existing planning documents in `features-plan/<module-name>/<feature-name>/`:
    - `1-functionalities.md`
    - `2-ui-ux-flow.md`
    - `3-backend-plan.md`
    - `proposed-plan.md`
-3. Use Graphify (`graphify query`) to check how the new request might impact existing code or architecture.
-4. **Update all 4 documents** to weave in the new feature seamlessly. Maintain the rigid structure required by each document:
-   - **Update 1**: Add the new item to the Functionalities List and adjust the Core Purpose if necessary.
-   - **Update 2**: Integrate into the Information Architecture, UI States, and Process Chain.
-   - **Update 3**: Update the YAML DB Schema, add required REST APIs, and define new Events/RBAC.
-   - **Update 4**: Modify the Implementation Sequence in `proposed-plan.md` to include the new DB migrations, APIs, and UI steps. Also update `common-dependants.md` if the new feature introduces cross-module dependencies.
-5. Provide a summary of the additions made across the plans.
+3. Use Graphify (`graphify query`) to check how the request might impact existing code, database structures, or other features.
+4. **Update all 4 documents** to weave in the changes seamlessly. Maintain the rigid structure required by each document:
+   - **Update 1 (Functionalities)**: Add, remove, or edit items in the Functionalities List. Update the Target Subscription Tier and justify any changes in tier packaging.
+   - **Update 2 (UI/UX)**: Add, remove, or modify UI States, Process Chains, or menu items in the navigation tree. If a feature was downgraded or tier-restricted, specify where the lock indicator 🔒 and Upgrade Gate Overlay will reside.
+   - **Update 3 (Backend)**: Add or delete database columns in the YAML Schema (ensuring soft-deletes and numeric precision). Create or remove REST APIs. Adjust the event subscriptions/emitters. Update the **RBAC Permissions & Licensing Guards** (e.g., adding or removing `require_licensed_feature` calls or `packages.json` mapping modifications).
+   - **Update 4 (Review & Roadmap)**: Restructure the sequence in `proposed-plan.md` (e.g., adding/removing migrations, API tests, and UI steps). Update `common-dependants.md` if dependencies change.
+5. Provide a clear, structured summary of the changes made across all 4 documents.
 
 ---
 
 ### Execution Rules
 - **Output**: Direct file edits to the 4 planning documents in `features-plan/<module-name>/<feature-name>/`.
-- **Next step**: Prompt the user to proceed to `5a-frontend-build` or `5b-backend-build` once the plan is approved.
+- **Next step**: Prompt the user to proceed to `5a-frontend-build` or `5b-backend-build` once the updated plan is approved.
+

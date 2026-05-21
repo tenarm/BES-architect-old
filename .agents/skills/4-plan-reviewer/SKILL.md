@@ -49,7 +49,14 @@ When reviewing the plan:
 Summarize what is being built.
 
 ## 2. Architectural Compliance Sign-off
-Provide a checklist confirming adherence to the rules (Money Rule, RBAC, Soft Deletes, UI degradation).
+Provide a checklist confirming adherence to the rules:
+- **Money Rule**: Currency columns configured with standard precision parameters (`Numeric(20,4)` in DB, `Decimal` in Python, and `decimal.js`/`big.js` in UI).
+- **Soft Deletes**: Active queries configured to filter by `is_deleted == False`.
+- **Database Architecture**: Core tables correctly extended and tenant bounds (`subsidiary_id`) strictly scoped.
+- **Subscription Tier Gate Check**: Confirm that licensing bounds are properly defined in `packages.json`, FastAPI endpoints enforce bounds using `require_licensed_feature()`, and the frontend UI gracefully degrades using lock 🔒 indicators and attractive upgrade overlays rather than throwing errors.
+- **Process Pipeline Configuration**: Verify that workflow definitions are saved in `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json`, steps align with backend events, and frontend triggers `loadModuleProcesses` dynamically.
+  - Verify that step-level licensing parameters (`requiredModule` or `requiredFeature`) are configured for any cross-module or gated steps to ensure clean backend self-healing.
+- **Layering Encapsulation Compliance**: Audit code/designs to ensure no hardcoded or custom inline `z-index` styles are added. Layering must rely entirely on internal stacking default configurations within `@bes/shared-ui` components.
 
 ## 3. Cross-Module Dependencies
 List any dependencies that affect other modules. (These must also be copied to `common-dependants.md`).
@@ -64,3 +71,4 @@ Provide the exact step-by-step roadmap for implementation, split by feature and 
   - `features-plan/<module-name>/<feature-name>/proposed-plan.md`
   - `features-plan/common-dependants.md` (if applicable)
 - **Next step**: Run `5a-frontend-build` and `5b-backend-build`.
+

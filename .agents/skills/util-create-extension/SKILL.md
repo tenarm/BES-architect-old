@@ -119,7 +119,7 @@ async def create_entity(session: AsyncSession, data: MyEntityCreate) -> MyEntity
 
 ### Step 7: Create `router.py`
 
-Thin HTTP layer that delegates to services.
+Thin HTTP layer that delegates to services and enforces licensing + permissions.
 
 ```python
 # bes-backend/extensions/<module_name>/<module_name>/router.py
@@ -133,15 +133,20 @@ from .services import create_entity
 from core.database import get_async_session
 from core.responses import success_response, paginated_response
 from core.pagination import PaginationParams
+from core.licensing import require_licensed_feature
+from core.rbac import require_permission
 
 router = APIRouter(prefix="/api/v1/<module_name>", tags=["<module_name>"])
 
 
-@router.get("/entities")
+@router.get("/entities", dependencies=[Depends(require_permission("<module_name>:entity:read"))])
 async def list_entities(
     pagination: PaginationParams = Depends(),
     session: AsyncSession = Depends(get_async_session)
 ):
+    # Enforce granular subscription tier licensing check
+    require_licensed_feature("<module_name>", "entity_management")
+
     count_stmt = select(func.count()).select_from(MyEntity).where(MyEntity.is_deleted == False)
     total = (await session.execute(count_stmt)).scalar() or 0
     
@@ -157,11 +162,14 @@ async def list_entities(
     return paginated_response(data=items, total=total, page=pagination.page, page_size=pagination.page_size)
 
 
-@router.post("/entities")
+@router.post("/entities", dependencies=[Depends(require_permission("<module_name>:entity:write"))])
 async def create_entity_endpoint(
     data: MyEntityCreate,
     session: AsyncSession = Depends(get_async_session)
 ):
+    # Enforce granular subscription tier licensing check
+    require_licensed_feature("<module_name>", "entity_management")
+
     item = await create_entity(session, data)
     return success_response(data=item)
 ```
@@ -222,31 +230,57 @@ class <Module>Manifest(ExtensionManifest):
 manifest = <Module>Manifest()
 ```
 
-### Step 10: Register in Client Config
+### Step 10: Map Module inside Packages Subscription Tiers
 
-Add the module name to `onboarded/<client>.json`:
+Register the module and its granular features in `core/core/packages.json` under the appropriate subscription tiers:
 ```json
 {
-  "licensed_modules": [..., "<module_name>"]
-}
-```
-
-### Step 11: Add Permissions
-
-Add the module's resources to `core/core/admin_permissions.json`:
-```json
-{
-  "<module_name>": {
-    "entity_management": { "read": true, "write": true, "delete": true }
+  "packages": {
+    "basic": {
+      "display_name": "Basic Plan",
+      "modules": {
+        "<module_name>": ["entity_management"]
+      }
+    },
+    "pro": {
+      "display_name": "Professional Plan",
+      "modules": {
+        "<module_name>": ["entity_management", "advanced_reporting"]
+      }
+    }
   }
 }
 ```
 
-### Step 12: Verify
+### Step 11: Add Master Permissions
+
+Register all available resources and granular actions for the new module in `core/core/admin_permissions.json`:
+```json
+{
+  "<module_name>": {
+    "entity_management": { "read": true, "write": true, "delete": true },
+    "advanced_reporting": { "read": true, "write": true, "delete": true }
+  }
+}
+```
+
+### Step 12: Onboard Client Instance
+
+Run the client onboarding CLI script to generate the client workspace chassis, compile licensed permissions, and build packages:
+```bash
+cd bes-backend
+python scripts/onboard_client.py
+```
+1. Input your `client_id` and `client_name`.
+2. Choose your subscription plan (Basic, Pro, Premium, or Custom).
+3. The script will automatically filter permissions according to the selected plan and copy boilerplate configurations to `instances/<client_id>`.
+
+### Step 13: Verify
 
 ```bash
 cd bes-backend
-pdm run uvicorn instances.acme_corp.acme_corp.main:app --reload
+pdm run uvicorn instances.<client_id>.<client_id>.main:app --reload
 # Check: GET /health
-# Check: GET /api/v1/<module_name>/entities (should return empty list)
+# Check: GET /api/v1/<module_name>/entities (should return empty list if licensed)
 ```
+

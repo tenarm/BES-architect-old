@@ -27,6 +27,7 @@ STEP 6: 6-bug-fixing            →  BUG FIXES
 ## About the BES Architecture
 - **Stack**: React (Nx Monorepo) frontend, FastAPI (PDM Monorepo) backend, PostgreSQL.
 - **Shell UI**: `apps/shell` dynamically loads licensed module libraries.
+- **Licensing Core**: Built-in subscription tiers (**Basic**, **Pro**, **Premium**) defined in `packages.json`.
 - **Graphify Context**: We use `graphify query` to search the codebase.
 - **Rule Sets**: Follow established rules in `.agents/rules/`.
 
@@ -38,27 +39,37 @@ When the user asks to plan functionalities:
 
 1. Ask the user for any specific details about the feature to analyze first.
 2. Use Graphify (`graphify query`) to check for any existing related features or overlaps.
-3. Generate the 4-section document below.
-4. Save to `features-plan/<module-name>/<feature-name>/1-functionalities.md`. Create the folder if needed.
+3. Review `core/core/packages.json` to align functionality groupings with our standard subscription plans.
+4. Assess if the feature or any of its sub-functionalities require a multi-step, multi-role approval workflow (a **Process Chain/Pipeline**). If yes, explicitly map it out and document it under Section 5.
+5. Generate the 5-section document below.
+6. Save to `features-plan/<module-name>/<feature-name>/1-functionalities.md`. Create the folder if needed.
 
 ---
 
-## Required 4-Section Structure
+## Required 5-Section Structure
 
 ## 1. Module & Feature Name
 State the parent BES module and the specific feature name.
 
-## 2. Core Purpose
-Describe the business value and goal of the feature within the BES system.
+## 2. Core Purpose & Target Subscription Tier
+Describe the business value and goal of the feature within the BES system. Explicitly state the target packaging plan (**Basic**, **Pro**, or **Premium**) and justify the placement.
 
 ## 3. Functionality Groups
-Logically group the functionalities (e.g., Core Setup, Workflow Actions, Dashboards/Reporting).
+Logically group the functionalities (e.g., Core Setup, Workflow Actions, Dashboards/Reporting). Mark each group with its licensing level (e.g., *Pro Feature*, *Premium Integration*).
 
 ## 4. Detailed Functionalities List
 List the exact functionalities. For each, describe what it does.
 *Example: Chart of Accounts (COA)*
-- *Add Account: Create a new account node.*
-- *Deactivate Account: Soft delete the account.*
+- *Add Account (Basic): Create a new account node.*
+- *Deactivate Account (Basic): Soft delete the account.*
+- *Advanced Cost Forecasting (Pro): Calculate multi-year cost center trend analytics.*
+
+## 5. Process Pipeline Requirements
+Explicitly evaluate and document:
+- **Process Chain Assessment**: Does this functionality require a multi-step, multi-role, or approval-driven flow (e.g., clearance checks, multi-layered approvals, offboarding)? Or is it a simple/instant synchronous operation?
+- **Workflow Steps (if needed)**: List target workflow steps, approval roles (RBAC) responsible for each step, status keys, and cross-module effects.
+- **Justification**: If no pipeline is needed, justify why a simple action (direct synchronous DB transaction) is sufficient.
+
 
 ---
 

@@ -46,10 +46,10 @@ When the user asks to plan backend:
 ## Required 6-Section Structure
 
 ## 1. Module & Feature Name
-State the module and feature.
+State the parent module and feature.
 
 ## 2. Database Schema (YAML)
-Provide a detailed YAML representation of the database schema including Tables, Columns, Types, and Foreign Keys.
+Provide a detailed YAML representation of the database schema including Tables, Columns, Types, and Foreign Keys (inheriting `BESBase`).
 
 ## 3. Hub-and-Spoke MDM Mapping
 Explicitly state how this feature maps to or extends the `core` schema entities.
@@ -57,14 +57,20 @@ Explicitly state how this feature maps to or extends the `core` schema entities.
 ## 4. REST APIs
 List all required APIs with request/response payloads conforming to the standard API envelope.
 
-## 5. Pub/Sub Events
-Define Event triggers (`UPPER_SNAKE_CASE` Pub/Sub events) to be emitted or listened to.
+## 5. Pub/Sub Events & Process Definitions
+- **Pub/Sub Events**: Define Event triggers (`UPPER_SNAKE_CASE` Pub/Sub events) to be emitted or listened to.
+- **Workflow Pipeline Definition JSON**: Specify the step-by-step process definition structure matching the schema fields (`processId`, `module`, `label`, `entity`, `steps`, `statusEvent`, `dependsOn`, `requiredRole`, `requiredModule`, `requiredFeature`, `action`).
+  - **Dynamic Step Licensing**: For any steps that cross into separate modules or require specific packages, explicitly specify `requiredModule` and `requiredFeature` on the step level to enable self-healing, license-aware pipeline construction.
+  - State that this file must be saved in `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json` so it can be dynamically loaded, filtered, and validated.
 
-## 6. RBAC Permissions
-Define the required security roles and `<module>:<resource>:<action>` mapping.
+## 6. RBAC Permissions & Licensing Guards
+- **RBAC Matrix**: Define required roles and `<module>:<resource>:<action>` mappings.
+- **Licensing Configurations**: Define changes required under `core/core/packages.json` to assign this sub-feature to a specific tier (Basic, Pro, or Premium).
+- **API Guard Placement**: Specify precisely which endpoints or services will invoke `require_licensed_feature("<module>", "<subfeature>")`.
 
 ---
 
 ### Execution Rules
 - **Output file**: `features-plan/<module-name>/<feature-name>/3-backend-plan.md`
 - **Next step**: Run `4-plan-reviewer`.
+

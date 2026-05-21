@@ -41,6 +41,7 @@ When asked to build the backend:
 4. Create database models inheriting from `BESBase` and applying Hub-and-Spoke MDM rules.
 5. Scaffold the FastAPI routers and endpoints.
 6. Apply RBAC permissions and wire up Pub/Sub events.
+7. Save workflow pipeline definition schemas in `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json` to register them automatically with the core dynamic scanner.
 
 ---
 

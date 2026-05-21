@@ -50,8 +50,10 @@ State the module and feature.
 Describe the hierarchy of pages, tabs, and drawer panels for the feature.
 
 ## 3. Process Chain & Workflow
-- **Macro View (`ProcessPipeline`)**: Horizontal tracker at top of Drawer (e.g., Draft → Pending → Approved).
-- **Micro View (`Timeline`)**: Vertical activity feed in a "History" secondary tab.
+- **Macro View (`FloatingProcessPipeline`)**: Glassmorphic vertical stepper overlay loaded on demand and cached in `sessionStorage` for immediate first paint, hydrated live via Server-Sent Events (SSE). Map out the visual states (Pending, Active, Waiting Approval, Complete, Failed).
+- **Approval Registry Modals**: Identify any custom verification forms that need registration in the central `ComponentRegistry`.
+- **Micro View (`Timeline`)**: Vertical historical log feed in a "History" secondary tab.
+- **Layering Compliance**: Confirm that layering is delegated entirely to the built-in styles of the `@bes/shared-ui` components. Warn against specifying manual inline `z-index` properties.
 
 ## 4. Shared UI Components
 Map out exactly which `@bes/shared-ui` components will be used. Do not propose custom non-shared components.
