@@ -40,3 +40,31 @@ These rules govern all React/TypeScript code in the `bes-frontend/` Nx monorepo.
 - **Styling**: Use **vanilla CSS** with CSS custom properties (design tokens from `@bes/shared-ui`). NEVER use inline styles for reusable components. Primary color: `#162867` (`var(--ui-primary)`).
 - **Components**: Functional components only. Use unique, descriptive `id` attributes for testing. Named exports from libraries.
 - **TypeScript**: Strict mode enabled. No `any` types. Use `interface` for props, `type` for unions. Use path aliases (`@bes/finance`).
+
+## 7. UX Laws & Cognitive Load Reductions
+All frontend designs and layouts must apply these behavioral psychology principles:
+- **System-Directed Mental Models**: Standardize navigation, status badges, forms, and workflows across all modules. Keep layouts uniform so a user who learns one module (e.g. Finance) instantly understands how to operate others (e.g. Sales).
+- **Miller’s Law (Information Chunking)**: Do not overwhelm the user. Chunk forms and metadata into logically clustered groupings or progressive wizard steps of 5-7 elements maximum. Use clean section separators, tabs, or headers.
+- **Fitts's Law for Data Entry**: Primary buttons, input toggles, and dropdown fields must have generous click/tap targets. Position primary action controls (e.g., Save, Submit) predictably and in close physical proximity to the final input fields to minimize cursor travel distance.
+- **Error-Forgiving Design**: Protect users from mistakes. Provide real-time inline input validation, explicit helpers, warning indicators, and undo operations. When actions fail, present friendly explanations showing how to fix it rather than showing a generic error code.
+- **Aesthetic-Usability Effect**: Deliver visually premium, polished interfaces (e.g. cohesive dark/light palettes, Outfit/Inter typography, subtle glassmorphism cards, and smooth micro-animations like bell vibration or badge pulsing). Users perceive beautiful interfaces as more usable and trustworthy.
+- **Density Over Whitespace**: Enterprise software requires data density. Maximize grid visibility and tabular presentation with compact cell paddings, short row heights, and tag chips. Avoid excessive empty space that forces unnecessary scrolling.
+- **Persistent Context**: Never force users to memorize information or jump screens to view details. Use split-screen side drawers, flyout panels, or side-by-side preview panes to show record details, activity logs, or approval steppers alongside the main data grid.
+
+## 8. Beginner-Friendly Frontend Development
+- **Clear File Layout**: Group components logically within module subdirectories (e.g. components, hooks, stores).
+- **Simple Abstractions**: Avoid over-complex TypeScript generics, custom hooks wrapper chains, or deep nesting of components. Write straightforward functional components with readable variables and inline comments explaining state flows.
+- **Storybook / Isolated Testing**: Build shared UI components in isolation to let beginner developer peers view and understand usage examples without launching the full backend server.
+
+## 9. Notification Integration
+- **Real-Time Notification Bell**: The global shell header must include an active Notification Bell component. It subscribes to `/api/v1/notifications/stream` over Server-Sent Events (SSE) using the user's active JWT bearer token. It manages a local list of recent notifications and an unread count.
+- **Micro-interactions & UX Feedback**: Apply the Aesthetic-Usability Effect with subtle animations. When a new notification arrives via SSE:
+  - The bell icon must perform a subtle vibration/shake animation.
+  - The unread badge counter must pulse and increment dynamically.
+- **Metadata-Driven Redirection (Dynamic Routing)**: Notification payloads should include routing metadata (e.g. `{"target_route": "/sales/invoices", "entity_id": "123-456"}`). Clicking a notification must redirect the user to the route and automatically open the detail drawer or flyout panel for the specific entity, maintaining persistent context.
+- **Settings & Channel Licensing Lock**: In the Notification Rules configuration page:
+  - Basic-tier tenants cannot activate premium channels (e.g., `EMAIL`).
+  - Next to premium channel toggle options, render a lock icon `🔒`.
+  - Clicking a locked notification channel option must launch the central `UpgradeGateOverlay` listing packages instead of failing or displaying a blank screen.
+
+

@@ -41,12 +41,12 @@ When the user asks to plan functionalities:
 2. Use Graphify (`graphify query`) to check for any existing related features or overlaps.
 3. Review `core/core/packages.json` to align functionality groupings with our standard subscription plans.
 4. Assess if the feature or any of its sub-functionalities require a multi-step, multi-role approval workflow (a **Process Chain/Pipeline**). If yes, explicitly map it out and document it under Section 5.
-5. Generate the 5-section document below.
+5. Generate the 6-section document below.
 6. Save to `features-plan/<module-name>/<feature-name>/1-functionalities.md`. Create the folder if needed.
 
 ---
 
-## Required 5-Section Structure
+## Required 6-Section Structure
 
 ## 1. Module & Feature Name
 State the parent BES module and the specific feature name.
@@ -56,9 +56,10 @@ Describe the business value and goal of the feature within the BES system. Expli
 
 ## 3. Functionality Groups
 Logically group the functionalities (e.g., Core Setup, Workflow Actions, Dashboards/Reporting). Mark each group with its licensing level (e.g., *Pro Feature*, *Premium Integration*).
+*Note: Apply Miller’s Law (Information Chunking). Restrict the total number of functionality groups to between 5 and 7 to keep the layout cognitive-friendly for beginner developers and users.*
 
 ## 4. Detailed Functionalities List
-List the exact functionalities. For each, describe what it does.
+List the exact functionalities. For each, describe what it does. Keep definitions clear, modular, and beginner-friendly.
 *Example: Chart of Accounts (COA)*
 - *Add Account (Basic): Create a new account node.*
 - *Deactivate Account (Basic): Soft delete the account.*
@@ -70,6 +71,12 @@ Explicitly evaluate and document:
 - **Workflow Steps (if needed)**: List target workflow steps, approval roles (RBAC) responsible for each step, status keys, and cross-module effects.
 - **Justification**: If no pipeline is needed, justify why a simple action (direct synchronous DB transaction) is sufficient.
 
+## 6. Notification Requirements
+Explicitly identify the notification alerts triggered by this feature:
+- **Trigger Events**: What action/status changes emit events that require notifying users (e.g. `SALES_ORDER_COMPLETED`)?
+- **Channels**: Which channels should be default configured (e.g. `IN_APP` for basic notifications, `EMAIL` for high-importance alerts)?
+- **Templates**: Draft the default Jinja2 template titles and bodies referencing event data (e.g., "New invoice for {{ customer_name }} of amount {{ total }} created").
+- **Recipients**: Define target recipients (e.g. user_id of creator, members of a specific role, or a dynamic email path in the event payload).
 
 ---
 

@@ -56,7 +56,7 @@ Every extension MUST follow this structure:
   - In background processes or queue workers, checking failure raises `LicensingError`.
 - **System Bypass**: Privileged background routines and system-initiated event listeners bypass license verification when wrapped in `with elevate_context():`.
 
-## 8. Client Customization & Instance Extension Foundation
+## 9. Client Customization & Instance Extension Foundation
 - **Code Separation**: Standard extension modules and the core engine are 100% tenant-agnostic. All client-specific code (custom endpoints, business logic, DB models, integrations) MUST live strictly within `instances/<client_id>/`.
 - **Cli Onboarding & Merging Permissions**:
   - Clients are provisioned using `scripts/onboard_client.py`.
@@ -64,9 +64,31 @@ Every extension MUST follow this structure:
 - **Dynamic Model Provisioning**: Client-specific models must reside in `instances/<client_id>/<client_id>/models/`. They must be eagerly registered inside the client chassis's `lifespan.py` lifespan context before executing `SQLModel.metadata.create_all` on startup.
 - **Decoupled Business Rules**: Client instances subscribe dynamically to the core event bus (`core.events`) inside `lifespan.py` to trigger custom webhooks or handlers without mutating standard extension packages.
 
-## 9. Import Ordering
+## 10. Beginner-Friendly & Self-Documenting Design
+- **Clean Structure**: Code modules must follow a strict file division (models, schemas, services, router, events). This separation makes it intuitive for beginners to know exactly where logic goes.
+- **Self-Documenting Code**: Document all functions, classes, and service actions with explicit docstrings, parameter types, and return types. Use inline comments to explain non-obvious business logic, avoiding complex code shortcuts.
+- **Traceability**: All cross-module workflows should emit trace events with explicit `correlation_id` values, ensuring operations can be tracked sequentially in the database and audit timeline.
+
+## 11. Error-Forgiving API Design
+- **Informative Exceptions**: Do not crash on bad user input or licensing failures. APIs must catch expected errors (e.g. database constraints, validation errors, licensing limits) and translate them into clear, human-readable error messages via `StandardResponse` or `HTTPException`.
+- **Validation Helpers**: Leverage Pydantic's descriptive validation errors to highlight exactly which fields failed validation, providing actionable feedback to the caller.
+- **Soft Deletion**: Always enforce soft deletes via `is_deleted = True` for models inheriting `BESBase` to prevent permanent, accidental data loss.
+
+## 12. Import Ordering
 1. Standard library (`os`, `uuid`, `datetime`, `decimal`)
 2. Third-party (`fastapi`, `sqlmodel`)
 3. Core package (`core.database`, `core.responses`)
 4. Current module (`.models`, `.schemas`, `.services`)
+
+## 13. Core Notification Service Architecture
+- **Event-Driven Dispatch**: Business logic services must NEVER instantiate or save notification records directly. They must emit high-level Pub/Sub events (e.g. `SALES_ORDER_COMPLETED`) to `core.events` via `event_bus.emit(event)`.
+- **Database Rule Seeding**: Every module must seed default `NotificationRule` records for its key events. A rule defines:
+  - `event_type`: The matching `UPPER_SNAKE_CASE` event payload type.
+  - `channel`: The delivery medium, either `IN_APP` or `EMAIL`.
+  - `recipient_type`: How recipients are identified (`USER`, `ROLE`, or `DYNAMIC_PATH`).
+  - `recipient_target`: The user ID, role name, or a JSONPath selector string matching the event payload (e.g., `$.data.created_by` or `$.data.customer_email`).
+  - `template_title` / `template_body`: Jinja2 formatted template strings to construct the notification content dynamically from event variables.
+- **Channel Licensing & Lockouts**: The core notifications processor checks if features are licensed before triggering rules. For example, if a tenant's basic plan does not license the settings rule customization feature (e.g., `settings:notification_rules` or custom channels), premium channels like `EMAIL` are bypassed and skipped, while standard `IN_APP` notifications proceed if allowed.
+- **SSE Stream**: Real-time delivery of `IN_APP` notifications uses `notification_broadcaster` to stream updates over a `/api/v1/notifications/stream` Server-Sent Events (SSE) connection.
+
 

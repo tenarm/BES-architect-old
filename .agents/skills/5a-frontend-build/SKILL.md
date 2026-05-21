@@ -43,6 +43,8 @@ When asked to build the frontend:
 6. Register the newly created views into the Shell's `ComponentRegistry`.
 7. Wire up process loading: ensure module navigation routes hook into `loadModuleProcesses` dynamically to populate `sessionStorage`.
 8. Delegate layering to `@bes/shared-ui` components. Do not hardcode or override `z-index` values in local component styles.
+9. Enforce all UX laws and cognitive load reductions from `.agents/rules/2-frontend-architecture.md` (Aesthetic-Usability, Miller's Law, Fitts's Law, Error-Forgiving Design, Density Over Whitespace, and Persistent Context side panels/drawers).
+10. Keep code beginner-friendly: write functional components, use descriptive variable names, provide extensive inline documentation for state logic, and expose clear TypeScript interfaces.
 
 ---
 

@@ -57,6 +57,10 @@ Provide a checklist confirming adherence to the rules:
 - **Process Pipeline Configuration**: Verify that workflow definitions are saved in `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json`, steps align with backend events, and frontend triggers `loadModuleProcesses` dynamically.
   - Verify that step-level licensing parameters (`requiredModule` or `requiredFeature`) are configured for any cross-module or gated steps to ensure clean backend self-healing.
 - **Layering Encapsulation Compliance**: Audit code/designs to ensure no hardcoded or custom inline `z-index` styles are added. Layering must rely entirely on internal stacking default configurations within `@bes/shared-ui` components.
+- **Event-Driven Notification Setup**: Verify that default database notification rule seeds (`NotificationRule`) are correctly defined for emitted Pub/Sub events:
+  - Channels are gated correctly based on tiers (e.g. `IN_APP` for basic, `EMAIL` gated to Pro/Premium).
+  - Templates utilize clean Jinja2 styling and recipient dynamic paths are properly set via JSONPath (e.g. `$.data.created_by`).
+  - The UI Notification Bell listens via the SSE `/stream` endpoint and handles micro-interactions (vibration/pulsing) and metadata-driven navigation.
 
 ## 3. Cross-Module Dependencies
 List any dependencies that affect other modules. (These must also be copied to `common-dependants.md`).

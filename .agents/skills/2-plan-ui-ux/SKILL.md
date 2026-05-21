@@ -41,13 +41,14 @@ When the user asks to plan UI/UX:
 
 ---
 
-## Required 5-Section Structure
+## Required 6-Section Structure
 
 ## 1. Module & Feature Name
 State the module and feature.
 
 ## 2. Information Architecture
-Describe the hierarchy of pages, tabs, and drawer panels for the feature.
+Describe the hierarchy of pages, tabs, and drawer panels for the feature. 
+*Compliance Check:* Outline how this architecture supports a **System-Directed Mental Model** matching the rest of the application.
 
 ## 3. Process Chain & Workflow
 - **Macro View (`FloatingProcessPipeline`)**: Glassmorphic vertical stepper overlay loaded on demand and cached in `sessionStorage` for immediate first paint, hydrated live via Server-Sent Events (SSE). Map out the visual states (Pending, Active, Waiting Approval, Complete, Failed).
@@ -63,8 +64,15 @@ Detail the step-by-step UX walkthrough and states:
 - Empty states
 - Loading skeletons
 - Error boundaries
-- Data Table columns
-- Form inputs in the Drawer
+- Data Table columns (emphasize **Density Over Whitespace** with tight paddings and visual status tags)
+- Form inputs in the Drawer/Side Panel (emphasize **Persistent Context**: explain how details are edited side-by-side with the main grid without forcing the user to navigate away)
+
+## 6. Cognitive UX Design Compliance
+Explicitly document how the design applies the following laws:
+- **Miller's Law (Information Chunking)**: Detail how the inputs, fields, and tabs are chunked into groups of 5-7 elements to prevent cognitive overload.
+- **Fitts's Law for Data Entry**: Explain the placement, sizing, and proximity of primary action buttons (like "Save" or "Submit") relative to input focus fields.
+- **Error-Forgiving Design**: Detail the inline form validation indicators, input helpers, warning states, and how errors show actionable instructions rather than raw error codes.
+- **Aesthetic-Usability Effect**: List design tokens, layouts, glassmorphism overlays, and micro-animations that make the interface feel premium, polished, and intuitive.
 
 ---
 

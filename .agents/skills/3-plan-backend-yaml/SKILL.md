@@ -62,6 +62,13 @@ List all required APIs with request/response payloads conforming to the standard
 - **Workflow Pipeline Definition JSON**: Specify the step-by-step process definition structure matching the schema fields (`processId`, `module`, `label`, `entity`, `steps`, `statusEvent`, `dependsOn`, `requiredRole`, `requiredModule`, `requiredFeature`, `action`).
   - **Dynamic Step Licensing**: For any steps that cross into separate modules or require specific packages, explicitly specify `requiredModule` and `requiredFeature` on the step level to enable self-healing, license-aware pipeline construction.
   - State that this file must be saved in `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json` so it can be dynamically loaded, filtered, and validated.
+- **Notification Rule Seeds (Event-Driven Notifications)**: Define the database seeds (`NotificationRule`) for notifications triggered by this feature's events:
+  - **`event_type`**: The matching `UPPER_SNAKE_CASE` event emitted on the bus.
+  - **`channel`**: The target delivery medium (`IN_APP`, `EMAIL`).
+  - **`recipient_type`**: How to locate the recipient (`USER_ID`, `ROLE`, or `DYNAMIC_PATH`).
+  - **`recipient_path`**: JSONPath expression to extract recipient user IDs or email addresses dynamically from the event payload (e.g. `$.data.created_by` or `$.data.assigned_to`).
+  - **`title_template` / `body_template`**: Jinja2 strings interpolating event data attributes (e.g., `"New task assigned: {{ task_title }}"`).
+  - **`licensing`**: Assign licensing constraints to notification channels (e.g., `IN_APP` is Basic, but `EMAIL` is Pro/Premium, forcing upgrade checks if a tenant tries to enable or seed them).
 
 ## 6. RBAC Permissions & Licensing Guards
 - **RBAC Matrix**: Define required roles and `<module>:<resource>:<action>` mappings.

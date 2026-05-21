@@ -42,6 +42,8 @@ When asked to build the backend:
 5. Scaffold the FastAPI routers and endpoints.
 6. Apply RBAC permissions and wire up Pub/Sub events.
 7. Save workflow pipeline definition schemas in `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json` to register them automatically with the core dynamic scanner.
+8. Enforce all backend architectural and security rules from `.agents/rules/1-backend-architecture.md` (Beginner-Friendly & Self-Documenting Design, Error-Forgiving API Design, soft-deletes).
+9. Keep backend code beginner-friendly: write explicit docstrings, use typed variables, avoid overly complex SQLAlchemy operations, and structure services/repositories clearly with detailed inline comments.
 
 ---
 
