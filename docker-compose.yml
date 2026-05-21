@@ -1,0 +1,30 @@
+services:
+  # FastAPI Backend Service for the specified client
+  backend:
+    build:
+      context: ./bes-backend
+      dockerfile: ./instances/${CLIENT_ID}/Dockerfile
+    container_name: bes-backend-${CLIENT_ID}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      # Persist SQLite database and local uploads on the host system for this specific client
+      - ./bes-backend/instances/${CLIENT_ID}/data:/app/instances/${CLIENT_ID}/data
+    environment:
+      - ENV=production
+    restart: unless-stopped
+
+  # React Frontend Shell Service
+  frontend:
+    build:
+      context: ./bes-frontend
+      dockerfile: ./Dockerfile
+    container_name: bes-frontend-shell-${CLIENT_ID}
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    environment:
+      # Point to backend container using Docker's internal DNS name
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
