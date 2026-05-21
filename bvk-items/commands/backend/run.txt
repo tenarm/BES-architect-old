@@ -1,9 +1,21 @@
-cd /Users/bvk/BVK_Workspace/BES_NEW/bes-backend
+cd /Users/bvk/BVK_Workspace/BES/bes-backend
 
- source .venv/bin/activate
-
-pdm run uvicorn instances.acme_corp.acme_corp.main:app --reload
+source .venv/bin/activate
 
 
-## Adding extension
+## 1. Adding a new Extension
 pdm run python scripts/add_extension.py --id sales --name Sales
+pdm run python scripts/add_extension.py --id settings --name Settings
+
+
+## 2. Onboarding a Client
+pdm run python scripts/onboard_client.py
+
+
+## 3. Upgrading or Degrading Client Licenses
+pdm run python scripts/change_license.py --client-id test_custom --plan basic
+pdm run python scripts/change_license.py --client-id test_custom --plan pro
+
+
+## 4. Running the FastAPI Server for a Client
+pdm run uvicorn instances.test_custom.test_custom.main:app --reload
