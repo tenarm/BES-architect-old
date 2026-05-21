@@ -3,3 +3,7 @@ cd /Users/bvk/BVK_Workspace/BES_NEW/bes-backend
  source .venv/bin/activate
 
 pdm run uvicorn instances.acme_corp.acme_corp.main:app --reload
+
+
+## Adding extension
+pdm run python scripts/add_extension.py --id sales --name Sales
