@@ -16,10 +16,11 @@ This skill walks you through creating a new Nx library for a BES module's UI com
 
 ## Steps
 
-### Step 1: Generate the Nx Library
+### Step 1: Generate the Nx Library & Test Configuration
 
-Run this command from the workspace root (`BES/bes-frontend`):
+Run these commands from the workspace root (`BES/bes-frontend`):
 
+#### 1. Generate the library skeleton:
 ```bash
 npx nx generate @nx/react:library [module-name] \
   --directory=libs/[module-name] \
@@ -28,6 +29,29 @@ npx nx generate @nx/react:library [module-name] \
   --unitTestRunner=none \
   --style=css \
   --no-interactive
+```
+
+#### 2. Systematically add Vitest test configurations (inferred test target):
+```bash
+npx nx generate @nx/vitest:configuration --project=[module-name]
+```
+
+#### 3. Update the generated `libs/[module-name]/vite.config.mts` to reference the shared UI global test setup:
+Modify the `test` block inside `libs/[module-name]/vite.config.mts` to configure the `jsdom` environment and point `setupFiles` to the shared UI test-setup file to avoid duplicating global mocks:
+```typescript
+  test: {
+    name: '[module-name]',
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['../../libs/shared-ui/src/test-setup.ts'],
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/libs/[module-name]',
+      provider: 'v8' as const,
+    },
+  },
 ```
 
 > [!NOTE]
@@ -126,7 +150,26 @@ export const [ModuleName]HomePage: React.FC = () => {
 };
 ```
 
+### Step 3b: Create the Unit Test
 
+Create a placeholder unit test to verify that the page renders correctly under Vitest:
+
+`libs/[module-name]/src/lib/[module-name]-home.spec.tsx`:
+
+```typescript
+// libs/[module-name]/src/lib/[module-name]-home.spec.tsx
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { [ModuleName]HomePage } from './[module-name]-home';
+
+describe('[ModuleName]HomePage', () => {
+  it('renders the page header and title successfully', () => {
+    render(<[ModuleName]HomePage />);
+    expect(screen.getByText('[Module Display Name]')).toBeInTheDocument();
+  });
+});
+```
 
 ### Step 4: Register in the Shell
 
@@ -169,9 +212,17 @@ export const MODULE_ICONS: Record<string, React.ReactNode> = {
 
 ### Step 6: Verify
 
+#### 1. Run the Unit Tests:
+Run the Vitest suite to verify the test setup and placeholder test pass successfully:
 ```bash
 # From workspace root
 cd bes-frontend
+npx nx test [module-name]
+```
+
+#### 2. Run the Development Server:
+Verify that the module functions normally in the local UI:
+```bash
 npm run dev
 ```
 

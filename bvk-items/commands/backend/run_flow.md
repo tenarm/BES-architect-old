@@ -74,3 +74,50 @@ flowchart TD
     J --> K[Seed default admin roles and default admin user if missing]
     K --> L([Uvicorn Ready & Listening on Port 8000])
 ```
+
+---
+
+## 5. Testing Pipeline Workflow (`pdm run test`)
+
+```mermaid
+flowchart TD
+    A([Start: pdm run test]) --> B[Load tool.pytest.ini_options: ignore scratch/build directories]
+    B --> C[Pytest Collection: locate tests/ folders under core, extensions, instances]
+    C --> D[Initialize Session-Scoped In-Memory SQLite: sqlite+aiosqlite:///:memory:]
+    D --> E[Build Schema: run SQLModel.metadata.create_all]
+    E --> F[Test Run Execution: yield isolated db_session per test case]
+    F --> G[FastAPI Override: inject test db_session into APIRoutes]
+    G --> H[Execution Ends: tear down in-memory SQLite tables]
+    H --> I([End: Test Results Output])
+```
+
+---
+
+## 6. Frontend Unit & Component Testing Pipeline (`npx nx test [lib]`)
+
+```mermaid
+flowchart TD
+    A([Start: npx nx test lib]) --> B[Parse project.json & load vite.config.mts]
+    B --> C[Vitest Initialization: setup jsdom & load global mocks from shared-ui test-setup.ts]
+    C --> D[Scan specifications: locate *.spec.ts or *.spec.tsx]
+    D --> E[Execute tests: run component render / store updates / RBAC mapping]
+    E --> F[Verify 80% coverage requirements if configured]
+    F --> G([End: Test Results & Coverage output])
+```
+
+---
+
+## 7. Frontend E2E Testing Pipeline (`npx nx e2e shell-e2e`)
+
+```mermaid
+flowchart TD
+    A([Start: npx nx e2e shell-e2e]) --> B[Load playwright.config.ts]
+    B --> C[Launch Vite Dev Server: serve shell locally in background]
+    C --> D[Browser Initialization: spin up headless Chromium on port 4200]
+    D --> E[Sequence Execution: run Playwright tests sequentially to prevent port conflict]
+    E --> F[Mock Network Layer: intercept backend endpoints & rate-limit SSE stream]
+    F --> G[Assess assertions: verify sign-in, authentication persistence, and subscription gate behavior]
+    G --> H[Shutdown server & close browser context]
+    H --> I([End: E2E Test Report & Artifacts])
+```
+
