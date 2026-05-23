@@ -77,6 +77,7 @@ All database models inherit from `core.models.BESBase` which implements:
 - **Expansion Joint**: A `metadata_` JSONB column.
   - Used for "Ghost Foreign Keys" (referencing client-specific or third-party tables without hard SQL foreign key constraints).
   - Used for dynamic client-specific custom fields without altering the database schema.
+- **Concurrency Tracking**: A `version_id` column used to track entity updates for optimistic locking.
 
 ### B. Hierarchical Multi-Tenancy
 Multi-tenancy is enforced through a dual-isolation layer:
@@ -86,7 +87,16 @@ Multi-tenancy is enforced through a dual-isolation layer:
 ### C. Hub-and-Spoke Master Data Management (MDM)
 Core master entities (such as `customers` and `vendors`) are maintained inside the Core database workspace. Extension modules reference these core master records using "Ghost Foreign Keys" mapped within their `metadata_` schemas rather than direct SQL level joins, preventing circular dependencies across extensions.
 
+### D. Concurrency Control (Optimistic & Pessimistic Locking)
+To handle concurrent edit conflicts ("lost updates") in collaborative multi-user environments:
+1. **Optimistic Locking**:
+   - `BESBase` includes a `version_id` column configured dynamically as `version_id_col` via SQLAlchemy `@declared_attr`.
+   - On updates, `BaseRepository.update` checks that the client's expected version matches the DB version. A mismatch raises `ConcurrencyError`, which is handled globally to return `409 Conflict`.
+2. **Pessimistic Locking**:
+   - For high-contention operations (e.g. inventory deductions, ledger postings), services must use `BaseRepository.get_with_lock(session, id)` to lock rows with `FOR UPDATE`.
+
 ---
+
 
 ## 4. Subscription Packaging & Tier Licensing
 
@@ -223,6 +233,16 @@ All endpoints return an envelope built from the Core's standard response system:
   "error": null
 }
 ```
+- **Global Error Formatting**: All unhandled exceptions, FastAPI validation errors, optimistic locking `ConcurrencyError`s, and standard `HTTPException`s (including 404, 403, 401) are wrapped globally via exception handlers in `core.responses` to ensure they always conform to the standard error envelope:
+  ```json
+  {
+    "status": "error",
+    "data": null,
+    "metadata": null,
+    "error": "Error message description"
+  }
+  ```
+
 
 ### C. Audit Trails & Soft Deletes
 Data integrity is paramount. Physical deletions are disabled across all business tables. Inactive records are flagged with `is_deleted = true`. System events, schema updates, and REST requests automatically record transactional `Request-ID` tags, and standard updates update the `updated_at` timestamps instantly.

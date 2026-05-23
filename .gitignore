@@ -18,3 +18,7 @@ bes-backend/__pycache__/
 
 # graphify
 graphify-out/
+
+features-plan/
+
+.DS_Store

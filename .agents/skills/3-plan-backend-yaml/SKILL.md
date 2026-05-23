@@ -49,13 +49,17 @@ When the user asks to plan backend:
 State the parent module and feature.
 
 ## 2. Database Schema (YAML)
-Provide a detailed YAML representation of the database schema including Tables, Columns, Types, and Foreign Keys (inheriting `BESBase`).
+Provide a detailed YAML representation of the database schema including Tables, Columns, Types, and Foreign Keys (inheriting `BESBase`). 
+- Explicitly declare the `version_id` column on each table and confirm if Optimistic Concurrency Control is enabled.
 
 ## 3. Hub-and-Spoke MDM Mapping
 Explicitly state how this feature maps to or extends the `core` schema entities.
 
 ## 4. REST APIs
 List all required APIs with request/response payloads conforming to the standard API envelope.
+- **Optimistic Concurrency Specifications**: For PUT/PATCH endpoints, specify the `version_id` payload field required to execute the concurrency validation check.
+- **Pessimistic Concurrency Specifications**: Explicitly specify which service layers or transactional endpoints will utilize pessimistic locks (e.g. using `get_with_lock` / `FOR UPDATE`) to prevent double-processing.
+
 
 ## 5. Pub/Sub Events & Process Definitions
 - **Pub/Sub Events**: Define Event triggers (`UPPER_SNAKE_CASE` Pub/Sub events) to be emitted or listened to.

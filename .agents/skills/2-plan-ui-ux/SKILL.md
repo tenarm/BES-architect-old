@@ -66,6 +66,8 @@ Detail the step-by-step UX walkthrough and states:
 - Error boundaries
 - Data Table columns (emphasize **Density Over Whitespace** with tight paddings and visual status tags)
 - Form inputs in the Drawer/Side Panel (emphasize **Persistent Context**: explain how details are edited side-by-side with the main grid without forcing the user to navigate away)
+- **Concurrency Conflict Handling**: Detail the user experience when a conflict occurs (HTTP 409). E.g., showing a user-friendly conflict banner, displaying the concurrent modifications, and providing a "Refresh latest data" action or conflict resolver helper.
+
 
 ## 6. Cognitive UX Design Compliance
 Explicitly document how the design applies the following laws:

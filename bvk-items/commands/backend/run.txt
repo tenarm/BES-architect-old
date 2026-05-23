@@ -5,7 +5,7 @@ source .venv/bin/activate
 
 ## 1. Adding a new Extension
 pdm run python scripts/add_extension.py --id sales --name Sales
-pdm run python scripts/add_extension.py --id settings --name Settings
+pdm run python scripts/add_extension.py --id supply_chain --name "Supply chain"
 
 
 ## 2. Onboarding a Client

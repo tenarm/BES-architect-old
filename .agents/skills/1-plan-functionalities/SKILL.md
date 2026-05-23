@@ -65,11 +65,15 @@ List the exact functionalities. For each, describe what it does. Keep definition
 - *Deactivate Account (Basic): Soft delete the account.*
 - *Advanced Cost Forecasting (Pro): Calculate multi-year cost center trend analytics.*
 
-## 5. Process Pipeline Requirements
+## 5. Process Pipeline & Concurrency Requirements
 Explicitly evaluate and document:
 - **Process Chain Assessment**: Does this functionality require a multi-step, multi-role, or approval-driven flow (e.g., clearance checks, multi-layered approvals, offboarding)? Or is it a simple/instant synchronous operation?
 - **Workflow Steps (if needed)**: List target workflow steps, approval roles (RBAC) responsible for each step, status keys, and cross-module effects.
-- **Justification**: If no pipeline is needed, justify why a simple action (direct synchronous DB transaction) is sufficient.
+- **Concurrency & Locking Assessment**: Evaluate potential multi-user conflict scenarios:
+  - *Optimistic Locking*: Identify general entities (e.g., master settings, customer profiles, product detail edits) that need version-based collision protection.
+  - *Pessimistic Locking*: Identify transactional or critical resources (e.g., inventory deductions, double ledger postings, payment status transitions) that must use DB row locking (`FOR UPDATE`) to prevent double-processing.
+- **Justification**: If no pipeline or specific locking is needed, justify why direct un-locked DB transactions are sufficient.
+
 
 ## 6. Notification Requirements
 Explicitly identify the notification alerts triggered by this feature:

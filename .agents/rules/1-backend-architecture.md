@@ -18,16 +18,21 @@ Every extension MUST follow this structure:
 - **`manifest.py`**: MUST export a `manifest` instance of `ExtensionManifest`.
 
 ## 3. Database, Models, and Isolation (Multi-Tenancy)
-- **Base Inheritance**: ALL tables MUST inherit from `core.models.BESBase` (provides UUID `id`, `created_at`, `updated_at`, `created_by`, `is_deleted`, `subsidiary_id`, `metadata_`).
+- **Base Inheritance**: ALL tables MUST inherit from `core.models.BESBase` (provides UUID `id`, `created_at`, `updated_at`, `created_by`, `is_deleted`, `subsidiary_id`, `metadata_`, `version_id`).
 - **Multi-Tenancy**: DB-per-tenant isolation. Within a DB, `subsidiary_id` scopes data. Queries automatically filter via `ContextAwareSecurityMiddleware` and `BaseRepository._apply_scopes()`.
 - **Hub-and-Spoke MDM**: Core Master data (`customers`, `vendors`) resides in `core`. Module-specific tables use FKs to core.
 - **Soft Deletes**: Physical deletion is FORBIDDEN. Use `is_deleted = True`. Queries must filter by `is_deleted == False`.
 - **The Money Rule**: ALL financial amounts MUST use `sa_column=Column(Numeric(precision=20, scale=4))` in DB and `Decimal` in Python. NEVER use `float`.
+- **Concurrency Control**: 
+  - **Optimistic Locking**: Handled automatically via `version_id` on `BESBase`. Updates MUST pass the loaded version ID to `BaseRepository.update` to prevent edit overrides; conflicts raise `ConcurrencyError` and return `409 Conflict`.
+  - **Pessimistic Locking**: Use `BaseRepository.get_with_lock(session, id)` to lock rows with `FOR UPDATE` for high-contention database modifications.
+
 
 ## 4. API Standards & Pagination
-- **Envelope**: ALL responses MUST use `StandardResponse` (`success_response`, `paginated_response`, `error_response`) returning `{ status, data, metadata, error }`.
+- **Envelope**: ALL responses (including successful results, field validation errors, concurrency collisions, and standard `HTTPException`s) MUST conform to the `StandardResponse` envelope (`{ status, data, metadata, error }`). This is enforced globally via FastAPI exception handlers configured by `setup_exception_handlers` in `core.responses`.
 - **Pagination**: ALL list endpoints MUST support pagination using `core.pagination.PaginationParams`. Max page size is 200.
 - **Route Prefix**: `/api/v1/<module>`.
+
 
 ## 5. Security & RBAC
 - **Secrets**: NEVER hardcode secrets. Use `os.environ["KEY"]` (fail-fast).
