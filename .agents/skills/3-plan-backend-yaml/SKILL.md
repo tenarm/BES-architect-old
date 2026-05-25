@@ -38,12 +38,12 @@ STEP 6: 6-bug-fixing            →  BUG FIXES
 When the user asks to plan backend:
 
 1. Read `1-functionalities.md` and `2-ui-ux-flow.md`.
-2. Generate the 6-section document below.
+2. Generate the 7-section document below.
 3. Save to `features-plan/<module-name>/<feature-name>/3-backend-plan.md`.
 
 ---
 
-## Required 6-Section Structure
+## Required 7-Section Structure
 
 ## 1. Module & Feature Name
 State the parent module and feature.
@@ -59,7 +59,6 @@ Explicitly state how this feature maps to or extends the `core` schema entities.
 List all required APIs with request/response payloads conforming to the standard API envelope.
 - **Optimistic Concurrency Specifications**: For PUT/PATCH endpoints, specify the `version_id` payload field required to execute the concurrency validation check.
 - **Pessimistic Concurrency Specifications**: Explicitly specify which service layers or transactional endpoints will utilize pessimistic locks (e.g. using `get_with_lock` / `FOR UPDATE`) to prevent double-processing.
-
 
 ## 5. Pub/Sub Events & Process Definitions
 - **Pub/Sub Events**: Define Event triggers (`UPPER_SNAKE_CASE` Pub/Sub events) to be emitted or listened to.
@@ -79,9 +78,18 @@ List all required APIs with request/response payloads conforming to the standard
 - **Licensing Configurations**: Define changes required under `core/core/packages.json` to assign this sub-feature to a specific tier (Basic, Pro, or Premium).
 - **API Guard Placement**: Specify precisely which endpoints or services will invoke `require_licensed_feature("<module>", "<subfeature>")`.
 
+## 7. Service Layer & Core Business Logic
+Define the business services structure, validation policies, and core transaction boundaries in the service layer (`services.py`).
+- **Domain Validation & Business Invariants Matrix**: List the precise business validation policies, preconditions, and exception triggers (e.g. unique constraints, state-transition rules, value limits) for each operational service.
+- **Service Method Specifications**: For each major database write/update service operation:
+  - **Method Signature**: Declare method name, parameters, and return type.
+  - **Pre-conditions & Validations**: Specify checks performed before mutating the database state.
+  - **Calculations & Rounding Algorithms**: Define exact precision formulas, discount allocations, or rounding procedures (decimal-safe).
+  - **Database Actions & Transaction Boundaries**: Outline which models are read/updated, and confirm they run inside a unified database transaction block.
+  - **Post-conditions & Side-Effects**: Detail events emitted, notifications triggered, or synchronous updates to associated models.
+
 ---
 
 ### Execution Rules
 - **Output file**: `features-plan/<module-name>/<feature-name>/3-backend-plan.md`
 - **Next step**: Run `4-plan-reviewer`.
-

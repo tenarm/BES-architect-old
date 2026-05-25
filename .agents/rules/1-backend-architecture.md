@@ -96,4 +96,41 @@ Every extension MUST follow this structure:
 - **Channel Licensing & Lockouts**: The core notifications processor checks if features are licensed before triggering rules. For example, if a tenant's basic plan does not license the settings rule customization feature (e.g., `settings:notification_rules` or custom channels), premium channels like `EMAIL` are bypassed and skipped, while standard `IN_APP` notifications proceed if allowed.
 - **SSE Stream**: Real-time delivery of `IN_APP` notifications uses `notification_broadcaster` to stream updates over a `/api/v1/notifications/stream` Server-Sent Events (SSE) connection.
 
+## 14. Business Service Layer & Domain Rules
+To ensure the business logic layer (`services.py`) remains decoupling-ready, maintainable, and mathematically robust, follow these strict rules:
+
+- **Decoupled Domain Exceptions**:
+  - Business services MUST NOT raise web-specific exceptions like FastAPI `HTTPException` directly.
+  - Instead, services must define and raise module-specific custom Exceptions (e.g., `DuplicateTaxRegistrationError`, `InsufficientStockError`, or a base `DomainException`).
+  - The API router layer (`router.py`) or a central FastAPI exception handler is responsible for catching these domain exceptions and translating them into standard HTTP status codes and responses.
+  
+- **Service Transaction Boundaries & Unit of Work**:
+  - The service layer is the sole orchestrator of database transactions.
+  - The repository layer (`BaseRepository`) and router layer (`router.py`) MUST NOT call `session.commit()` or `session.rollback()`.
+  - Service functions must run their validations, mutations, and insertions under a shared session context. Call `await session.commit()` only after all business rules have been successfully validated and applied.
+  - If a multi-entity orchestration flow is required, pass the same `AsyncSession` reference down through all helper service calls to ensure they share the same transaction (Unit of Work).
+
+- **Service Hierarchy & Circular Import Prevention**:
+  - Services must be logically layered to prevent circular dependencies within extension modules:
+    - **Leaf Services**: Handle CRUD and basic invariants for a single specific entity (e.g., `CustomerService`). They never import or reference other services.
+    - **Composite Services**: Orchestrate workflows across multiple leaf services or modules (e.g., `OrderProcessingService` calling `CustomerService` and `InventoryService`).
+  - Cross-module business reactions must always be decoupled using the asynchronous **Event Bus** (`core.events`).
+
+- **Mathematical Calculation & Rounding Safeties**:
+  - All mathematical operations involving currency, prices, or ledger totals MUST use Python's `decimal` library.
+  - Perform all intermediate calculations at maximum precision to prevent rounding error accumulation.
+  - Quantize and round only at the final document boundary or ledger posting stage. Round values to exactly 4 decimal places (`Numeric(20,4)`) using `.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)`.
+
+- **Safe Post-Commit Event Dispatching**:
+  - High-level Pub/Sub events MUST NOT be emitted before the database transaction commits successfully.
+  - If a service publishes an event and the database commit subsequently fails, external subscribers will act on invalid data.
+  - Collect events in an in-memory session/request queue during processing, and dispatch them to the event bus immediately *after* the `await session.commit()` call has resolved successfully.
+
+- **State Machine Transition Invariants**:
+  - For entities that progress through workflow statuses (e.g. `Draft -> Approved -> Fulfilled -> Invoiced`), the service layer is responsible for enforcing status transition rules.
+  - Status updates must be checked against a strict, valid transition matrix. Avoid direct/arbitrary status mutations.
+  - Atomic side effects associated with a transition (e.g., locking inventory stock upon moving to `Fulfilled` or posting immutable journals upon moving to `Invoiced`) must execute synchronously within the same database transaction.
+
+
+
 

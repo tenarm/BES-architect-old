@@ -66,6 +66,7 @@ Provide a checklist confirming adherence to the rules:
   - Channels are gated correctly based on tiers (e.g. `IN_APP` for basic, `EMAIL` gated to Pro/Premium).
   - Templates utilize clean Jinja2 styling and recipient dynamic paths are properly set via JSONPath (e.g. `$.data.created_by`).
   - The UI Notification Bell listens via the SSE `/stream` endpoint and handles micro-interactions (vibration/pulsing) and metadata-driven navigation.
+- **Service Layer & Business Logic Design**: Verify that core business logic, domain validation rules, service method signatures, transaction boundaries, and calculations/formulas are mapped out in Section 7 of `3-backend-plan.md` to ensure they are implemented in the service layer (`services.py`) and not the thin router layer.
 
 ## 3. Cross-Module Dependencies & Shared Reference Registry
 
@@ -85,4 +86,3 @@ Provide the exact step-by-step roadmap for implementation, split by feature and 
   - `features-plan/<module-name>/<feature-name>/proposed-plan.md`
   - `features-plan/common-dependants.md` (if applicable)
 - **Next step**: Run `5a-frontend-build` and `5b-backend-build`.
-

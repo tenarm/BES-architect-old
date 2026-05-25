@@ -48,6 +48,7 @@ When asked to plan functionalities:
    - *Product Strategy*: Stage-wise placement (Phase 1, Phase 2, or Never), cost justification.
    - *Risk Assessment*: Security, compliance, data integrity, migration bottlenecks.
 4. **Define ERP Design Boundaries**: Explicitly investigate and document:
+   - *Domain Validation & Business Invariants*: Outline field-level constraints, value bounds, cross-field dependency validations, state transition checks, and core mathematical formulas or calculations.
    - *MDM & Data Governance*: Entity ownership (System of Record) and approval gates for master modifications.
    - *Currency & UOM Strategy*: Base vs. transactional units, exchange rate conversions, and variance posting.
    - *Immutable Ledger Postings*: Sub-ledger posting logic, double-entry offset rules, and period-close validation check gates.
@@ -92,10 +93,12 @@ Logically group and list the functionalities. Apply the Prioritization Framework
   - *Optimistic Locking*: Identify general master records or configurations needing version conflict protection (`version_id`).
   - *Pessimistic Locking*: Identify high-contention resources (e.g., stock reductions, ledger entries) requiring row-level locking (`FOR UPDATE`).
 
-## 7. Operational, Financial & Localization Rules
+## 7. Operational, Financial, Localization & Domain Rules
 - **Units of Measure (UOM) Strategy**: Define base UOMs, transactional UOM options, and conversions (e.g., base unit 'Each', transactions in 'Box of 12').
 - **Multi-Currency Strategy**: If transactions use currency, define spot exchange rate sources, transaction vs. base ledger conversions, and currency variance posting rules.
 - **Immutable Ledger Postings**: Specify if write-once sub-ledger postings are required (e.g., Stock Ledger, GL). Detail posting rules (debit/credit offsets) and accounting period close validation checks.
+- **Domain Validation & Core Invariants**: Define strict validation policies (e.g. tax ID format validations, non-negative value limits, email formatting rules, and state-transition constraints).
+- **Core Calculations & Mathematical Formulas**: Define precise algorithms, rounding rules, tax rules, and calculation formulas (e.g., price calculations, discount applications) using decimal-safe limits.
 
 ## 8. Integration, Analytics & Notification Requirements
 - **Integration Boundaries**: Document dependencies on third-party APIs (e.g., payment, shipping), fail-safe modes (e.g., queues, asynchronous retries), and stubs required for testing.
