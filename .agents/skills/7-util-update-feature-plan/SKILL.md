@@ -42,7 +42,7 @@ When the owner asks to add, remove, or modify functionalities in an existing pla
    - **Update 1 (Functionalities)**: Add, remove, or edit items in the Functionalities List. Update the Target Subscription Tier and justify any changes in tier packaging.
    - **Update 2 (UI/UX)**: Add, remove, or modify UI States, Process Chains, or menu items in the navigation tree. If a feature was downgraded or tier-restricted, specify where the lock indicator 🔒 and Upgrade Gate Overlay will reside.
    - **Update 3 (Backend)**: Add or delete database columns in the YAML Schema (ensuring soft-deletes and numeric precision). Create or remove REST APIs. Adjust the event subscriptions/emitters. Update the **RBAC Permissions & Licensing Guards** (e.g., adding or removing `require_licensed_feature` calls or `packages.json` mapping modifications).
-   - **Update 4 (Review & Roadmap)**: Restructure the sequence in `proposed-plan.md` (e.g., adding/removing migrations, API tests, and UI steps). Update `common-dependants.md` if dependencies change.
+   - **Update 4 (Review & Roadmap)**: Restructure the sequence in `proposed-plan.md` (e.g., adding/removing migrations, API tests, and UI steps). Update the Required External Dependencies and Exposed Reusable Assets sections in `proposed-plan.md` and `common-dependants.md` if dependencies or shareable assets change.
 5. Provide a clear, structured summary of the changes made across all 4 documents.
 
 ---

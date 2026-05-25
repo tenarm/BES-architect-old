@@ -36,7 +36,7 @@ STEP 6: 6-bug-fixing            →  BUG FIXES
 When the user asks to plan UI/UX:
 
 1. Read the output of `features-plan/<module-name>/<feature-name>/1-functionalities.md`.
-2. Generate the 5-section document below.
+2. Generate the 6-section document below.
 3. Save to `features-plan/<module-name>/<feature-name>/2-ui-ux-flow.md`.
 
 ---
@@ -59,15 +59,15 @@ Describe the hierarchy of pages, tabs, and drawer panels for the feature.
 ## 4. Shared UI Components
 Map out exactly which `@bes/shared-ui` components will be used. Do not propose custom non-shared components.
 
-## 5. UI States & Walkthrough
-Detail the step-by-step UX walkthrough and states:
-- Empty states
-- Loading skeletons
-- Error boundaries
-- Data Table columns (emphasize **Density Over Whitespace** with tight paddings and visual status tags)
-- Form inputs in the Drawer/Side Panel (emphasize **Persistent Context**: explain how details are edited side-by-side with the main grid without forcing the user to navigate away)
+## 5. UI-UX Flow & Walkthrough
+Detail the step-by-step interactive UI-UX flow and visual states:
+- **Interactive UI-UX Flow (User Journey)**: Describe the step-by-step user path (e.g., clicking a button opens a specific side drawer, triggering a validation error shows inline helpers, saving a form triggers an SSE event, which updates the main data grid and closes the drawer).
+- **Empty States**: Design for clean, empty-state illustrations with clear Call-to-Actions (CTAs) guiding users to create their first record.
+- **Loading Skeletons**: Map out modern skeleton loading layouts matching the data structure to keep user perception fast.
+- **Error Boundaries**: Define error boundaries displaying friendly explanations and recovery actions.
+- **Data Table Columns**: Structure columns to maximize **Density Over Whitespace** with tight paddings and visual status tags.
+- **Form Inputs & Persistent Context**: Explain how forms are laid out in drawers/panels side-by-side with the main grid, preserving context.
 - **Concurrency Conflict Handling**: Detail the user experience when a conflict occurs (HTTP 409). E.g., showing a user-friendly conflict banner, displaying the concurrent modifications, and providing a "Refresh latest data" action or conflict resolver helper.
-
 
 ## 6. Cognitive UX Design Compliance
 Explicitly document how the design applies the following laws:

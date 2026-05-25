@@ -25,8 +25,8 @@ STEP 6: 6-bug-fixing            →  BUG FIXES
 ---
 
 ## About the BES Architecture
-- This phase verifies adherence to `.agents/rules/` including `BESBase`, Money Rule, Soft Deletes, and `@bes/shared-ui`.
-- Cross-module dependencies are critical in the Hub-and-Spoke model and must be tracked globally.
+- This phase verifies adherence to `.agents/rules/` including `BESBase`, Money Rule, Soft Deletes, `@bes/shared-ui`, and `4-planning-dependencies.md`.
+- Managing a massive app built in stages requires tracing schema/database references (e.g. settings configs, FK tables, master catalogs) to ensure base entities are implemented in the correct topological order.
 
 ---
 
@@ -36,10 +36,15 @@ When reviewing the plan:
 
 1. Read `1-functionalities.md`, `2-ui-ux-flow.md`, and `3-backend-plan.md`.
 2. Use `graphify path` to verify relationships and check for dependencies on other modules.
-3. Evaluate the plan for architectural compliance.
-4. Generate the 4-section `proposed-plan.md` document below.
-5. If the module relies on or impacts another module, ALSO append to `features-plan/common-dependants.md`.
-6. Save to `features-plan/<module-name>/<feature-name>/proposed-plan.md`.
+3. **Trace Domain, Schema, & Code Dependencies**: 
+   - **Inbound (Prerequisites)**: Explicitly identify database schemas, settings configurations, master data catalogs, or endpoints that this feature relies on. Determine the exact build order required to prevent compilation or database migration failures.
+   - **Outbound (Shareable Assets)**: Identify any new database tables, lookup endpoints, event models, configuration parameters, or UI widgets this feature introduces that will be referenced by upcoming features in later stages.
+4. Evaluate the plan for architectural compliance.
+5. Generate the 4-section `proposed-plan.md` document below.
+6. **Update the Shared Reference Registry**: If the feature has dependencies or exposes shareable assets, update `features-plan/common-dependants.md` under its respective module/feature section. Maintain two distinct tables:
+   - **Required External Dependencies (Inbound)**: Outline the required entities, their parent module, description of the reference, and the pre-requisite build order impact.
+   - **Exposed Reusable Assets & Shared Reference Notes (Outbound)**: Detail the exposed models, APIs, events, or UI widgets, who consumes them, and implementation/integration notes for upcoming stages.
+7. Save to `features-plan/<module-name>/<feature-name>/proposed-plan.md`.
 
 ---
 
@@ -62,11 +67,16 @@ Provide a checklist confirming adherence to the rules:
   - Templates utilize clean Jinja2 styling and recipient dynamic paths are properly set via JSONPath (e.g. `$.data.created_by`).
   - The UI Notification Bell listens via the SSE `/stream` endpoint and handles micro-interactions (vibration/pulsing) and metadata-driven navigation.
 
-## 3. Cross-Module Dependencies
-List any dependencies that affect other modules. (These must also be copied to `common-dependants.md`).
+## 3. Cross-Module Dependencies & Shared Reference Registry
+
+### 3.1 Required External Dependencies & Build Prerequisites (Inbound)
+List all external database models, settings configuration records, API routes, or event structures this feature references. State the specific parent module/feature and the pre-requisite build order impact (must be implemented before this feature). (These must also be copied to `common-dependants.md` under Required External Dependencies).
+
+### 3.2 Exposed Reusable Assets & Shared Reference Notes (Outbound)
+List database tables/models, configuration keys, API endpoints, event schemas, reusable UI components, or utilities introduced here that subsequent stages or other features will import/reference. Provide integration/referencing guidelines to keep the application build on track. (These must also be copied to `common-dependants.md` under Exposed Reusable Assets).
 
 ## 4. Implementation Sequence
-Provide the exact step-by-step roadmap for implementation, split by feature and phase (e.g., Phase 1 DB, Phase 2 APIs, Phase 3 UI).
+Provide the exact step-by-step roadmap for implementation, split by feature and phase (e.g., Phase 1 DB, Phase 2 APIs, Phase 3 UI). Identify when stubbed endpoints or repository mocks are needed to isolate staged builds.
 
 ---
 
