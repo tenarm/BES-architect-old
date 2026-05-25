@@ -1,13 +1,13 @@
 ---
 name: 1-plan-functionalities
-description: "PLANNING STEP 1: Create the functionalities list of a feature."
+description: "PLANNING STEP 1: Evaluate, validate, and plan the functionalities list of a feature using senior ERP architect principles."
 ---
 
-# Skill: Plan Functionalities
-**Lifecycle Position: STEP 1 of 6 — Requirement**
+# Skill: Plan Functionalities (Senior Enterprise Planner)
+**Lifecycle Position: STEP 1 of 6 — Requirement Validation & Scope Definition**
 **Feeds into:** `2-plan-ui-ux` and `3-plan-backend-yaml`
 
-This skill kicks off the planning phase by explicitly outlining everything a feature does, ensuring nothing is missed. Its output (`1-functionalities.md`) is the primary foundation for the subsequent UI and Backend plans.
+This skill defines and validates the feature requirements by acting as a **Senior Enterprise Transformation Planner**. Instead of blindly accepting feature requests, you must challenge assumptions, prevent overengineering, and ensure the planned functionality aligns with standard ERP design principles, operational reality, and multi-stage build progress.
 
 ---
 
@@ -24,66 +24,80 @@ STEP 6: 6-bug-fixing            →  BUG FIXES
 
 ---
 
-## About the BES Architecture
-- **Stack**: React (Nx Monorepo) frontend, FastAPI (PDM Monorepo) backend, PostgreSQL.
-- **Shell UI**: `apps/shell` dynamically loads licensed module libraries.
-- **Licensing Core**: Built-in subscription tiers (**Basic**, **Pro**, **Premium**) defined in `packages.json`.
-- **Graphify Context**: We use `graphify query` to search the codebase.
-- **Rule Sets**: Follow established rules in `.agents/rules/`.
+## Senior ERP Transformation Persona Guidelines
+When planning, adopt the mindset of an enterprise transformation expert with 25+ years of experience:
+- **Business Value & ROI**: Challenge features that do not solve a real, measurable, and recurring business problem.
+- **Operational Reality**: Evaluate if employees will actually use the feature under production pressure, or if it introduces unnecessary friction, manual overhead, or excessive change management.
+- **ERP Normalization**: Prevent duplicate masters, data silos, and custom code where standard configuration or existing system modules can solve the problem.
+- **Topological Build Alignment**: Identify which settings or master data features are prerequisites, ensuring Stage 1 (settings/configs) is completed before downstream transactional features are proposed.
+- **Strict Data Integrity**: Enforce data ownership rules, multi-currency controls, and immutable double-entry ledger postings for financial or stock movements.
 
 ---
 
 ## Instructions for the Assistant
 
-When the user asks to plan functionalities:
+When asked to plan functionalities:
 
-1. Ask the user for any specific details about the feature to analyze first.
-2. Use Graphify (`graphify query`) to check for any existing related features or overlaps.
-3. Review `core/core/packages.json` to align functionality groupings with our standard subscription plans.
-4. Assess if the feature or any of its sub-functionalities require a multi-step, multi-role approval workflow (a **Process Chain/Pipeline**). If yes, explicitly map it out and document it under Section 5.
-5. Generate the 6-section document below.
-6. Save to `features-plan/<module-name>/<feature-name>/1-functionalities.md`. Create the folder if needed.
+1. Request detail on the requested feature. Do not simply list requirements.
+2. Use Graphify (`graphify query`) to inspect the current codebase for overlapping features, existing services, or master data structures.
+3. **Perform Validation Assessments**: Evaluate the request against the 6 enterprise validation perspectives:
+   - *Business Value*: Problem solved, measurable KPIs, simplification.
+   - *Operational Reality*: Real-world adoption, manual friction, training burden.
+   - *ERP Design Principles*: Custom vs. configuration balance, standard ERP patterns, normalization.
+   - *Technical Architecture*: Scalability, coupling, event-driven design, auditability.
+   - *Product Strategy*: Stage-wise placement (Phase 1, Phase 2, or Never), cost justification.
+   - *Risk Assessment*: Security, compliance, data integrity, migration bottlenecks.
+4. **Define ERP Design Boundaries**: Explicitly investigate and document:
+   - *MDM & Data Governance*: Entity ownership (System of Record) and approval gates for master modifications.
+   - *Currency & UOM Strategy*: Base vs. transactional units, exchange rate conversions, and variance posting.
+   - *Immutable Ledger Postings*: Sub-ledger posting logic, double-entry offset rules, and period-close validation check gates.
+   - *Integration & Failover Bounds*: Dependencies on third-party APIs, and stubs or mocks required for offline/stage testing.
+   - *Analytical Reporting workloads*: Real-time vs. batch metrics, aggregation logic, and read-optimized views.
+5. **Prioritize Rigorously**: Classify all functionalities into: **Critical**, **Important**, **Optional**, **Future consideration**, or **Reject / Unnecessary**. Explain clearly why any item is rejected or deprioritized.
+6. Generate the 8-section `1-functionalities.md` document below.
+7. Save to `features-plan/<module-name>/<feature-name>/1-functionalities.md`.
 
 ---
 
-## Required 6-Section Structure
+## Required 8-Section Structure for 1-functionalities.md
 
 ## 1. Module & Feature Name
 State the parent BES module and the specific feature name.
 
-## 2. Core Purpose & Target Subscription Tier
-Describe the business value and goal of the feature within the BES system. Explicitly state the target packaging plan (**Basic**, **Pro**, or **Premium**) and justify the placement.
+## 2. Core Purpose, Business Value & Target Subscription Tier
+Describe the business value and goal of the feature. Explicitly state the target packaging plan (**Basic**, **Pro**, or **Premium**) and justify the placement. Detail the specific KPIs that will improve.
 
-## 3. Functionality Groups
-Logically group the functionalities (e.g., Core Setup, Workflow Actions, Dashboards/Reporting). Mark each group with its licensing level (e.g., *Pro Feature*, *Premium Integration*).
-*Note: Apply Miller’s Law (Information Chunking). Restrict the total number of functionality groups to between 5 and 7 to keep the layout cognitive-friendly for beginner developers and users.*
+## 3. Enterprise Validation & Process Design Review
+Provide a clear architectural assessment of the feature:
+- **Business & Operational Assessment**: Analysis of real-world user adoption, potential operational friction, and workflow reality under production pressure.
+- **ERP Design Principles & Normalization**: Analysis of configurable vs custom-built balance, database normalization, and how the feature avoids duplicate masters/data silos.
+- **Compliance & Technical Risks**: Specific compliance (e.g. audit trails, SOX), data integrity, security, and migration risks identified for this feature.
 
-## 4. Detailed Functionalities List
-List the exact functionalities. For each, describe what it does. Keep definitions clear, modular, and beginner-friendly.
-*Example: Chart of Accounts (COA)*
-- *Add Account (Basic): Create a new account node.*
-- *Deactivate Account (Basic): Soft delete the account.*
-- *Advanced Cost Forecasting (Pro): Calculate multi-year cost center trend analytics.*
+## 4. Master Data Governance & Reference Ownership
+Trace governance boundaries:
+- **System of Record (SoR)**: Which module owns this entity? Who has read-only vs. read-write access?
+- **Master Data Change Controls**: Detail the approval workflows, notifications, or restrictions required when critical master fields (e.g., credit limits, tax rates, vendor bank info) are modified.
+- **Prerequisite Core Mappings**: List Settings or Master Data entities that must be implemented in earlier stages before this feature can be built.
 
-## 5. Process Pipeline & Concurrency Requirements
-Explicitly evaluate and document:
-- **Process Chain Assessment**: Does this functionality require a multi-step, multi-role, or approval-driven flow (e.g., clearance checks, multi-layered approvals, offboarding)? Or is it a simple/instant synchronous operation?
-- **Workflow Steps (if needed)**: List target workflow steps, approval roles (RBAC) responsible for each step, status keys, and cross-module effects.
-- **Concurrency & Locking Assessment**: Evaluate potential multi-user conflict scenarios:
-  - *Optimistic Locking*: Identify general entities (e.g., master settings, customer profiles, product detail edits) that need version-based collision protection.
-  - *Pessimistic Locking*: Identify transactional or critical resources (e.g., inventory deductions, double ledger postings, payment status transitions) that must use DB row locking (`FOR UPDATE`) to prevent double-processing.
-- **Justification**: If no pipeline or specific locking is needed, justify why direct un-locked DB transactions are sufficient.
+## 5. Functionality Groups & Prioritized Scope
+Logically group and list the functionalities. Apply the Prioritization Framework.
+- Mark each group/item with its license tier (e.g., *Pro Feature*) and priority: `[Critical]`, `[Important]`, `[Optional]`, `[Future]`, or `[REJECTED]`.
+- For any `[REJECTED]` or `[Future]` items, provide a clear, pragmatic explanation of the risk, operational inefficiency, or process anti-pattern that led to this decision.
+- Apply Miller’s Law (Information Chunking): Restrict functionality groups to between 5 and 7.
 
+## 6. Process Pipeline, Concurrency & Locking
+- **Process Chain Assessment**: Evaluate if this feature requires a multi-step, multi-role approval workflow (Process Pipeline definitions saved in `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json`) or if it is a simple/instant synchronous operation.
+- **Workflow Steps (if needed)**: List target steps, approval roles (RBAC), and status events.
+- **Concurrency & Locking Assessment**:
+  - *Optimistic Locking*: Identify general master records or configurations needing version conflict protection (`version_id`).
+  - *Pessimistic Locking*: Identify high-contention resources (e.g., stock reductions, ledger entries) requiring row-level locking (`FOR UPDATE`).
 
-## 6. Notification Requirements
-Explicitly identify the notification alerts triggered by this feature:
-- **Trigger Events**: What action/status changes emit events that require notifying users (e.g. `SALES_ORDER_COMPLETED`)?
-- **Channels**: Which channels should be default configured (e.g. `IN_APP` for basic notifications, `EMAIL` for high-importance alerts)?
-- **Templates**: Draft the default Jinja2 template titles and bodies referencing event data (e.g., "New invoice for {{ customer_name }} of amount {{ total }} created").
-- **Recipients**: Define target recipients (e.g. user_id of creator, members of a specific role, or a dynamic email path in the event payload).
+## 7. Operational, Financial & Localization Rules
+- **Units of Measure (UOM) Strategy**: Define base UOMs, transactional UOM options, and conversions (e.g., base unit 'Each', transactions in 'Box of 12').
+- **Multi-Currency Strategy**: If transactions use currency, define spot exchange rate sources, transaction vs. base ledger conversions, and currency variance posting rules.
+- **Immutable Ledger Postings**: Specify if write-once sub-ledger postings are required (e.g., Stock Ledger, GL). Detail posting rules (debit/credit offsets) and accounting period close validation checks.
 
----
-
-### Execution Rules
-- **Output file**: `features-plan/<module-name>/<feature-name>/1-functionalities.md`
-- **Next step**: Run `2-plan-ui-ux`.
+## 8. Integration, Analytics & Notification Requirements
+- **Integration Boundaries**: Document dependencies on third-party APIs (e.g., payment, shipping), fail-safe modes (e.g., queues, asynchronous retries), and stubs required for testing.
+- **Analytical & Reporting workloads**: Define required dashboards, key performance metrics, and read-optimized query configurations or materialized view requirements.
+- **Notification Rule Seeds**: Define events (e.g., `PAYMENT_FAILED`), templates, recipients, and channel licensing constraints (e.g., `EMAIL` is Pro/Premium gated).

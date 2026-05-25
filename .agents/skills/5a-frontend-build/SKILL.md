@@ -35,9 +35,10 @@ STEP 6: 6-bug-fixing            →  BUG FIXES
 
 When asked to build the frontend:
 
-1. Read `features-plan/<module-name>/<feature-name>/proposed-plan.md` and `2-ui-ux-flow.md`.
-2. Use Graphify (`graphify query`) to check for the existing UI state and shared components.
-3. Execute the implementation steps defined in `proposed-plan.md` for the UI phase.
+1. Read the global bug registry [features-plan/build-bugs.md](file:///Users/bvk/BVK_Workspace/BES/features-plan/build-bugs.md) and the compiled prevention rules [.agents/rules/5-build-bug-prevention-rules.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/5-build-bug-prevention-rules.md). Identify any historical frontend, UI, or config issues relevant to your module or components, and note them as active quality constraints in your checklist.
+2. Read `features-plan/<module-name>/<feature-name>/proposed-plan.md` and `2-ui-ux-flow.md`.
+3. Use Graphify (`graphify query`) to check for the existing UI state and shared components.
+4. Execute the implementation steps defined in `proposed-plan.md` for the UI phase.
 4. Scaffold or modify the required React libraries and components in `bes-frontend/libs/<module>/`.
 5. Integrate with the backend APIs.
 6. Register the newly created views into the Shell's `ComponentRegistry`.

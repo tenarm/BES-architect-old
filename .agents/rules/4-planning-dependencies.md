@@ -42,7 +42,21 @@ To prevent circular database dependencies and migration deadlocks across extensi
 
 ---
 
-## 5. Formatting of common-dependants.md
+## 5. Master Data Governance (MDM) Rules
+To maintain a single source of truth across staging phases:
+- **System of Record (SoR)**: Every master entity (e.g., Tax Code, Employee Record, Item Master) must have exactly one owner module. Other modules must access this data read-only.
+- **Change Control Gates**: Critical master fields (e.g., Customer Credit Limit, Vendor Bank Details) must not allow direct database edits. All modifications must route through designated approval workflows or trigger notification alerts.
+
+---
+
+## 6. Financial, Compliance & Ledger Posting Rules
+- **Immutable Ledgers**: Transactional records affecting stock, financials, or assets must post to write-once, read-many sub-ledgers. Corrections must use offset reversal transactions; direct UPDATE/DELETE operations on posted ledgers are forbidden.
+- **UOM & Currency Scaling**: Transactional conversion rules and exchange rate variance mappings must be explicitly planned at the schema and service level.
+- **Period Close Gates**: Financial and inventory transaction services must validate accounting period lock status before writing postings.
+
+---
+
+## 7. Formatting of common-dependants.md
 To keep the global store clean, organized, and informative, every module/feature entry in `common-dependants.md` MUST follow this exact structure:
 - Organize under `## <Module Name> Module` -> `### Feature: <Feature Name>`.
 - Provide a clean, tabular presentation for both inbound and outbound dependencies.
@@ -57,7 +71,7 @@ To keep the global store clean, organized, and informative, every module/feature
 
 ---
 
-## 6. Architectural Rules for Dependency Verification
+## 8. Architectural Rules for Dependency Verification
 1. **Graphify Verification**: The plan reviewer MUST run `graphify path` or `graphify query` to verify that proposed external dependencies or shared assets actually exist (or are planned) before referencing them.
 2. **Circular Prevention**: Standard extension modules MUST NOT directly import or call each other. All inter-module actions must be event-driven via the Event Bus, or queried dynamically at runtime.
 3. **Lookup Registry Maintenance**: Before designing or proposing a new helper service, table, or UI component, the plan reviewer must consult `common-dependants.md` to see if a similar reusable asset has already been exposed. If it exists, the proposed plan must reuse it.

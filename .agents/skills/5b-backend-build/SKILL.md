@@ -35,9 +35,10 @@ STEP 6: 6-bug-fixing            →  BUG FIXES
 
 When asked to build the backend:
 
-1. Read `features-plan/<module-name>/<feature-name>/proposed-plan.md` and `3-backend-plan.md`.
-2. Use Graphify (`graphify query`) to verify `bes-core` imports and existing master data schemas.
-3. Execute the implementation steps defined in `proposed-plan.md` for the DB and API phases.
+1. Read the global bug registry [features-plan/build-bugs.md](file:///Users/bvk/BVK_Workspace/BES/features-plan/build-bugs.md) and the compiled prevention rules [.agents/rules/5-build-bug-prevention-rules.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/5-build-bug-prevention-rules.md). Identify any historical backend, database, event, or config issues relevant to your module, and note them as active quality constraints in your checklist.
+2. Read `features-plan/<module-name>/<feature-name>/proposed-plan.md` and `3-backend-plan.md`.
+3. Use Graphify (`graphify query`) to verify `bes-core` imports and existing master data schemas.
+4. Execute the implementation steps defined in `proposed-plan.md` for the DB and API phases.
 4. Create database models inheriting from `BESBase` and applying Hub-and-Spoke MDM rules.
 5. Scaffold the FastAPI routers and endpoints.
 6. Apply RBAC permissions and wire up Pub/Sub events.
