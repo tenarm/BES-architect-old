@@ -1,6 +1,6 @@
 # Backend Architecture Process Flows
 
-This document contains Mermaid diagrams illustrating the workflows parallel to the commands in [run.txt](file:///Users/bvk/BVK_Workspace/BES/bvk-items/commands/backend/run.txt).
+This document contains Mermaid diagrams illustrating the workflows parallel to the commands in [run.md](file:///Users/bvk/BVK_Workspace/BES/bvk-items/commands/backend/run.md).
 
 ---
 
@@ -8,18 +8,38 @@ This document contains Mermaid diagrams illustrating the workflows parallel to t
 
 ```mermaid
 flowchart TD
-    A([Start: add_extension.py]) --> B[Prompt or Read id & name]
-    B --> C[Create folders: extensions/id/id/]
-    C --> D[Generate Boilerplate: manifest.py, models.py, router.py, events.py, pyproject.toml]
-    D --> E[Register package in core/core/packages.json & admin_permissions.json]
-    E --> F[Add editable dependency to root pyproject.toml dev group]
-    F --> G[Run pdm lock -d & pdm install -d]
-    G --> H([End: Extension Registered & Synced])
+    A([Start: add_extension.py]) --> B[Prompt or Read id, name, and --modular flag]
+    B --> C{Is --modular active?}
+    C -- Yes --> D1[Create package directories: models/, schemas/, services/, router/]
+    C -- No --> D2[Create flat files: models.py, schemas.py, services.py, router.py]
+    D1 --> E[Generate package __init__.py files and boilerplate templates]
+    D2 --> F[Generate standard flat boilerplate files]
+    E --> G[Register package in core/core/packages.json & admin_permissions.json]
+    F --> G
+    G --> H[Add editable dependency to root pyproject.toml dev group]
+    H --> I[Run pdm lock -d & pdm install -d]
+    I --> J([End: Extension Registered & Synced])
 ```
 
 ---
 
-## 2. Client Onboarding Workflow (`onboard_client.py`)
+## 2. Extension Deletion Workflow (`remove_extension.py`)
+
+```mermaid
+flowchart TD
+    A([Start: remove_extension.py]) --> B[Read id & --force flag]
+    B --> C{Force delete or confirm interactive prompt?}
+    C -- Confirmed / Force --> D[Delete physical extensions/id/ directory]
+    C -- Aborted --> E([Cancel: Exit script])
+    D --> F[Remove editable dependency from root pyproject.toml dev group]
+    F --> G[Unregister package in core/core/packages.json & admin_permissions.json]
+    G --> H[Run pdm lock -d & pdm install -d in root workspace]
+    H --> I([End: Extension Deleted & Synced])
+```
+
+---
+
+## 3. Client Onboarding Workflow (`onboard_client.py`)
 
 ```mermaid
 flowchart TD
@@ -39,7 +59,7 @@ flowchart TD
 
 ---
 
-## 3. License Upgrade/Degrade Workflow (`change_license.py`)
+## 4. License Upgrade/Degrade Workflow (`change_license.py`)
 
 ```mermaid
 flowchart TD
@@ -57,7 +77,7 @@ flowchart TD
 
 ---
 
-## 4. Client Server Lifespan & Boot Workflow (`uvicorn`)
+## 5. Client Server Lifespan & Boot Workflow (`uvicorn`)
 
 ```mermaid
 flowchart TD
@@ -77,7 +97,7 @@ flowchart TD
 
 ---
 
-## 5. Testing Pipeline Workflow (`pdm run test`)
+## 6. Testing Pipeline Workflow (`pdm run test`)
 
 ```mermaid
 flowchart TD
@@ -93,7 +113,7 @@ flowchart TD
 
 ---
 
-## 6. Frontend Unit & Component Testing Pipeline (`npx nx test [lib]`)
+## 7. Frontend Unit & Component Testing Pipeline (`npx nx test [lib]`)
 
 ```mermaid
 flowchart TD
@@ -107,7 +127,7 @@ flowchart TD
 
 ---
 
-## 7. Frontend E2E Testing Pipeline (`npx nx e2e shell-e2e`)
+## 8. Frontend E2E Testing Pipeline (`npx nx e2e shell-e2e`)
 
 ```mermaid
 flowchart TD

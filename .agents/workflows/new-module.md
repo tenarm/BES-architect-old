@@ -42,15 +42,17 @@ Add to `bes-backend/onboarded/<client>.json`:
 ## Phase 2: Backend Implementation
 
 Follow the **[Create Extension](../skills/create-extension/SKILL.md)** skill:
+Run the CLI script `pdm run python scripts/add_extension.py` to scaffold the backend structure (pass `--modular` for complex/large modules requiring a package directory structure rather than flat files):
 
-1. Create directory structure
+1. Create directory structure (either flat files or modular directories/packages `models/`, `schemas/`, `services/`, `router/`)
 2. Create `pyproject.toml`
-3. Create `models.py` (DB tables only)
-4. Create `schemas.py` (API input/output)
-5. Create `services.py` (business logic)
-6. Create `router.py` (HTTP handlers with pagination)
+3. Create `models.py` (or `models/` directory package)
+4. Create `schemas.py` (or `schemas/` directory package)
+5. Create `services.py` (or `services/` directory package)
+6. Create `router.py` (or `router/` directory package with sub-routers and dynamic routing aggregation)
 7. Create `events.py` (subscribers and emitters)
 8. Create `manifest.py` (formal contract)
+
 
 ### Backend Verification
 ```bash
@@ -103,10 +105,10 @@ If this module emits or subscribes to events:
 
 ### Backend
 - [ ] `pyproject.toml` with `core` dependency
-- [ ] `models.py` with BESBase inheritance and Decimal for money
-- [ ] `schemas.py` with separate Create/Read classes
-- [ ] `services.py` with business logic
-- [ ] `router.py` with pagination on all list endpoints
+- [ ] `models.py` (or `models/` directory package) with BESBase inheritance and Decimal for money
+- [ ] `schemas.py` (or `schemas/` directory package) with separate Create/Read classes
+- [ ] `services.py` (or `services/` directory package) with business logic
+- [ ] `router.py` (or `router/` directory package) with pagination on all list endpoints
 - [ ] `events.py` with subscriber/emitter functions
 - [ ] `manifest.py` implementing ExtensionManifest
 - [ ] Module added to `admin_permissions.json`

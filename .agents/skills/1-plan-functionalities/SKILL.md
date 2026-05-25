@@ -87,20 +87,20 @@ Logically group and list the functionalities. Apply the Prioritization Framework
 - Apply Miller’s Law (Information Chunking): Restrict functionality groups to between 5 and 7.
 
 ## 6. Process Pipeline, Concurrency & Locking
-- **Process Chain Assessment**: Evaluate if this feature requires a multi-step, multi-role approval workflow (Process Pipeline definitions saved in `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json`) or if it is a simple/instant synchronous operation.
+- **Process Chain Assessment**: Evaluate if this feature requires a multi-step, multi-role approval workflow (Process Pipeline) or if it is a simple/instant synchronous operation.
 - **Workflow Steps (if needed)**: List target steps, approval roles (RBAC), and status events.
 - **Concurrency & Locking Assessment**:
-  - *Optimistic Locking*: Identify general master records or configurations needing version conflict protection (`version_id`).
-  - *Pessimistic Locking*: Identify high-contention resources (e.g., stock reductions, ledger entries) requiring row-level locking (`FOR UPDATE`).
+  - *Optimistic Locking*: Identify general master records or configurations needing version conflict protection.
+  - *Pessimistic Locking*: Identify high-contention business resources (e.g., inventory stock reductions, ledger entries) requiring transactional protection.
 
 ## 7. Operational, Financial, Localization & Domain Rules
-- **Units of Measure (UOM) Strategy**: Define base UOMs, transactional UOM options, and conversions (e.g., base unit 'Each', transactions in 'Box of 12').
-- **Multi-Currency Strategy**: If transactions use currency, define spot exchange rate sources, transaction vs. base ledger conversions, and currency variance posting rules.
-- **Immutable Ledger Postings**: Specify if write-once sub-ledger postings are required (e.g., Stock Ledger, GL). Detail posting rules (debit/credit offsets) and accounting period close validation checks.
-- **Domain Validation & Core Invariants**: Define strict validation policies (e.g. tax ID format validations, non-negative value limits, email formatting rules, and state-transition constraints).
-- **Core Calculations & Mathematical Formulas**: Define precise algorithms, rounding rules, tax rules, and calculation formulas (e.g., price calculations, discount applications) using decimal-safe limits.
+- **Units of Measure (UOM) Strategy**: Define base UOMs and transactional UOM options/conversions.
+- **Multi-Currency Strategy**: If transactions use currency, define transaction vs. base ledger currency logic.
+- **Immutable Ledger Postings**: Specify if sub-ledger postings are required (e.g., Stock Ledger, GL) and their business debit/credit mapping triggers.
+- **Domain Validation & Core Invariants**: Define strict validation policies (e.g. format validations, value limits, and state-transition constraints).
+- **Core Calculations & Mathematical Formulas**: Define precise business formulas, tax rules, discount applications, and rounding criteria.
 
 ## 8. Integration, Analytics & Notification Requirements
-- **Integration Boundaries**: Document dependencies on third-party APIs (e.g., payment, shipping), fail-safe modes (e.g., queues, asynchronous retries), and stubs required for testing.
-- **Analytical & Reporting workloads**: Define required dashboards, key performance metrics, and read-optimized query configurations or materialized view requirements.
-- **Notification Rule Seeds**: Define events (e.g., `PAYMENT_FAILED`), templates, recipients, and channel licensing constraints (e.g., `EMAIL` is Pro/Premium gated).
+- **Integration Boundaries**: Document dependencies on third-party APIs (e.g., payment, shipping) and fallback business paths.
+- **Analytical & Reporting workloads**: Define required dashboards, key performance metrics, and reporting dimensions.
+- **Notification Requirements**: Define events (e.g., `PAYMENT_FAILED`), target recipients (roles/users), and template messages.

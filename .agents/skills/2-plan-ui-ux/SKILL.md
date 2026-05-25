@@ -51,30 +51,22 @@ Describe the hierarchy of pages, tabs, and drawer panels for the feature.
 *Compliance Check:* Outline how this architecture supports a **System-Directed Mental Model** matching the rest of the application.
 
 ## 3. Process Chain & Workflow
-- **Macro View (`FloatingProcessPipeline`)**: Glassmorphic vertical stepper overlay loaded on demand and cached in `sessionStorage` for immediate first paint, hydrated live via Server-Sent Events (SSE). Map out the visual states (Pending, Active, Waiting Approval, Complete, Failed).
-- **Approval Registry Modals**: Identify any custom verification forms that need registration in the central `ComponentRegistry`.
-- **Micro View (`Timeline`)**: Vertical historical log feed in a "History" secondary tab.
-- **Layering Compliance**: Confirm that layering is delegated entirely to the built-in styles of the `@bes/shared-ui` components. Warn against specifying manual inline `z-index` properties.
+- **Macro View (`FloatingProcessPipeline`)**: Map out the visual process states (Pending, Active, Waiting Approval, Complete, Failed) for high-level workflow milestones.
+- **Micro View (`Timeline`)**: Vertical historical event logs feed designed for the secondary "History" tab.
 
 ## 4. Shared UI Components
 Map out exactly which `@bes/shared-ui` components will be used. Do not propose custom non-shared components.
 
 ## 5. UI-UX Flow & Walkthrough
 Detail the step-by-step interactive UI-UX flow and visual states:
-- **Interactive UI-UX Flow (User Journey)**: Describe the step-by-step user path (e.g., clicking a button opens a specific side drawer, triggering a validation error shows inline helpers, saving a form triggers an SSE event, which updates the main data grid and closes the drawer).
+- **Interactive UI-UX Flow (User Journey)**: Describe the step-by-step user path from entering the screen, opening drawers/panels, mutating state, and closing interactions.
 - **Empty States**: Design for clean, empty-state illustrations with clear Call-to-Actions (CTAs) guiding users to create their first record.
 - **Loading Skeletons**: Map out modern skeleton loading layouts matching the data structure to keep user perception fast.
-- **Error Boundaries**: Define error boundaries displaying friendly explanations and recovery actions.
 - **Data Table Columns**: Structure columns to maximize **Density Over Whitespace** with tight paddings and visual status tags.
 - **Form Inputs & Persistent Context**: Explain how forms are laid out in drawers/panels side-by-side with the main grid, preserving context.
-- **Concurrency Conflict Handling**: Detail the user experience when a conflict occurs (HTTP 409). E.g., showing a user-friendly conflict banner, displaying the concurrent modifications, and providing a "Refresh latest data" action or conflict resolver helper.
 
 ## 6. Cognitive UX Design Compliance
-Explicitly document how the design applies the following laws:
-- **Miller's Law (Information Chunking)**: Detail how the inputs, fields, and tabs are chunked into groups of 5-7 elements to prevent cognitive overload.
-- **Fitts's Law for Data Entry**: Explain the placement, sizing, and proximity of primary action buttons (like "Save" or "Submit") relative to input focus fields.
-- **Error-Forgiving Design**: Detail the inline form validation indicators, input helpers, warning states, and how errors show actionable instructions rather than raw error codes.
-- **Aesthetic-Usability Effect**: List design tokens, layouts, glassmorphism overlays, and micro-animations that make the interface feel premium, polished, and intuitive.
+Confirm that all page layouts, chunked forms, button placements, validation helpers, and split-screen side drawers adhere fully to the cognitive UX rules (Miller's Law, Fitts's Law, Error-Forgiving Design, Aesthetic-Usability Effect, Density Over Whitespace, and Persistent Context) defined in [2-frontend-architecture.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/2-frontend-architecture.md).
 
 ---
 

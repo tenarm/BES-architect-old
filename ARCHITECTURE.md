@@ -54,13 +54,20 @@ While built inside a monorepo for maximum developer efficiency, the codebase is 
 
 ## 2. Extension Module Layering
 
-Every extension module MUST strictly decouple concerns across the following structure:
+Every extension module MUST strictly decouple concerns across the following structure. For simple extensions, these are flat files:
 - **`models.py`**: Declares database tables inheriting from `BESBase`.
 - **`schemas.py`**: Declares Pydantic schemas for API payload validation (`*Create`, `*Read`). *ORM models must never be used directly as API parameters or returned unmapped.*
 - **`services.py`**: Executes business rules, transaction orchestration, database queries, and inter-table transformations.
 - **`router.py`**: Pure, thin HTTP layer that handles parsing parameters, checking permissions, and delegating to services. No business logic lives here.
 - **`events.py`**: Subscribes to and emits events via the global asynchronous Event Bus.
 - **`manifest.py`**: Exports an instance of `ExtensionManifest` to register metadata and license hooks.
+
+### Scaling Up: Modular Package Structure
+When an extension module grows too large or encompasses multiple distinct sub-features or entities (e.g. `settings`), it is modularized into packages (directories):
+- **Directories**: Subdivide the extension into directories named `models/`, `schemas/`, `services/`, and `router/`.
+- **Packaging (`__init__.py`)**: Each folder must contain an `__init__.py` file that re-exports its contents to preserve import compatibility from external packages (e.g., `from settings.models import CompanyProfile`).
+- **Routing Aggregation**: In `router/__init__.py`, initialize the main `APIRouter` (with prefix and tags) and mount modular sub-routers defined in individual files (e.g. `company.py`, `user.py`) using `include_router`.
+
 
 ---
 

@@ -1,16 +1,27 @@
+---
+trigger: always_on
+description: Scope definition, topological build stages, inbound/outbound dependencies, master data governance, and ledger rules governing planning and plan reviews.
+---
+
 # 4. Planning & Dependency Management Rules — BES
 
 These rules govern how feature plans, cross-module dependencies, and shareable references are reviewed, documented, and stored, especially for massive applications built in stages.
 
 ---
 
-## 1. Scope and Purpose of proposed-plan.md & common-dependants.md
+## 1. Domain-Only Feature Planning Principle
+To maintain clean, focused, and high-value documentation, feature planning documents (`1-functionalities.md`, `2-ui-ux-flow.md`, `3-backend-plan.md`, `proposed-plan.md`) must **strictly focus on domain-specific business logic, processes, columns, and invariants**. 
+Feature plans **MUST NOT duplicate or repeat generic mechanical/framework rules** (such as technical money-rule database/code declarations, soft delete queries, standard API response envelopes, sessionStorage caching mechanisms, and CSS z-indexes). These framework rules are defined globally in these central Rules files, which serve as the absolute, non-negotiable source of truth for the entire coding chassis.
+
+---
+
+## 2. Scope and Purpose of proposed-plan.md & common-dependants.md
 - **`proposed-plan.md`**: Generated for each feature under `features-plan/<module>/<feature>/`. It acts as the final architectural road-map before build step implementation.
 - **`features-plan/common-dependants.md`**: The global, shared reference registry for all cross-module interactions, configuration mappings, and reusable assets. It serves as the single source of truth to ensure the application build progress remains on track.
 
 ---
 
-## 2. Staged Building of Massive Applications
+## 3. Staged Building of Massive Applications
 To prevent development bottlenecks and maintain pipeline integrity in a multi-stage enterprise build, features must align with the system's topological order:
 
 1. **Stage 1 (Core Foundations & Global Settings)**: Auth, Subsidiaries, Users, Roles, currencies, base UOM, and master configuration entities.
@@ -20,7 +31,7 @@ To prevent development bottlenecks and maintain pipeline integrity in a multi-st
 
 ---
 
-## 3. Inbound vs. Outbound Dependencies
+## 4. Inbound vs. Outbound Dependencies
 Every feature review must identify and document the following dependency categories:
 
 *   **Required External Dependencies (Inbound / Prerequisites)**:
@@ -34,7 +45,7 @@ Every feature review must identify and document the following dependency categor
 
 ---
 
-## 4. Loose Coupling and "Ghost Foreign Keys"
+## 5. Loose Coupling and "Ghost Foreign Keys"
 To prevent circular database dependencies and migration deadlocks across extension modules:
 - Standard extensions must not use hard PostgreSQL-level foreign keys referencing other standard extensions.
 - Use **Ghost Foreign Keys**: Store references to other extension entities (e.g., a Purchase Order referencing an Inventory Item) inside a JSONB column (`metadata_` on `BESBase`) or validate dynamically via services at runtime.
@@ -42,21 +53,21 @@ To prevent circular database dependencies and migration deadlocks across extensi
 
 ---
 
-## 5. Master Data Governance (MDM) Rules
+## 6. Master Data Governance (MDM) Rules
 To maintain a single source of truth across staging phases:
 - **System of Record (SoR)**: Every master entity (e.g., Tax Code, Employee Record, Item Master) must have exactly one owner module. Other modules must access this data read-only.
 - **Change Control Gates**: Critical master fields (e.g., Customer Credit Limit, Vendor Bank Details) must not allow direct database edits. All modifications must route through designated approval workflows or trigger notification alerts.
 
 ---
 
-## 6. Financial, Compliance & Ledger Posting Rules
+## 7. Financial, Compliance & Ledger Posting Rules
 - **Immutable Ledgers**: Transactional records affecting stock, financials, or assets must post to write-once, read-many sub-ledgers. Corrections must use offset reversal transactions; direct UPDATE/DELETE operations on posted ledgers are forbidden.
 - **UOM & Currency Scaling**: Transactional conversion rules and exchange rate variance mappings must be explicitly planned at the schema and service level.
 - **Period Close Gates**: Financial and inventory transaction services must validate accounting period lock status before writing postings.
 
 ---
 
-## 7. Formatting of common-dependants.md
+## 8. Formatting of common-dependants.md
 To keep the global store clean, organized, and informative, every module/feature entry in `common-dependants.md` MUST follow this exact structure:
 - Organize under `## <Module Name> Module` -> `### Feature: <Feature Name>`.
 - Provide a clean, tabular presentation for both inbound and outbound dependencies.
@@ -71,7 +82,7 @@ To keep the global store clean, organized, and informative, every module/feature
 
 ---
 
-## 8. Architectural Rules for Dependency Verification
+## 9. Architectural Rules for Dependency Verification
 1. **Graphify Verification**: The plan reviewer MUST run `graphify path` or `graphify query` to verify that proposed external dependencies or shared assets actually exist (or are planned) before referencing them.
 2. **Circular Prevention**: Standard extension modules MUST NOT directly import or call each other. All inter-module actions must be event-driven via the Event Bus, or queried dynamically at runtime.
 3. **Lookup Registry Maintenance**: Before designing or proposing a new helper service, table, or UI component, the plan reviewer must consult `common-dependants.md` to see if a similar reusable asset has already been exposed. If it exists, the proposed plan must reuse it.

@@ -49,44 +49,33 @@ When the user asks to plan backend:
 State the parent module and feature.
 
 ## 2. Database Schema (YAML)
-Provide a detailed YAML representation of the database schema including Tables, Columns, Types, and Foreign Keys (inheriting `BESBase`). 
-- Explicitly declare the `version_id` column on each table and confirm if Optimistic Concurrency Control is enabled.
+Provide a detailed YAML representation of the database schema including Tables, Columns, Types, and Foreign Keys. 
+- *Rule Check:* Do not repeat standard audit and tracking fields (`id`, `created_at`, `updated_at`, `created_by`, `is_deleted`, `subsidiary_id`, `version_id`) as they are automatically provided by `BESBase`. Focus only on feature-specific business fields.
 
 ## 3. Hub-and-Spoke MDM Mapping
 Explicitly state how this feature maps to or extends the `core` schema entities.
 
 ## 4. REST APIs
-List all required APIs with request/response payloads conforming to the standard API envelope.
-- **Optimistic Concurrency Specifications**: For PUT/PATCH endpoints, specify the `version_id` payload field required to execute the concurrency validation check.
-- **Pessimistic Concurrency Specifications**: Explicitly specify which service layers or transactional endpoints will utilize pessimistic locks (e.g. using `get_with_lock` / `FOR UPDATE`) to prevent double-processing.
+List all required API endpoints with request/response payloads.
+- *Rule Check:* Do not define standard HTTP status codes, error models, or response envelopes. Identify which endpoints require transactional locking for high-contention operations.
 
 ## 5. Pub/Sub Events & Process Definitions
-- **Pub/Sub Events**: Define Event triggers (`UPPER_SNAKE_CASE` Pub/Sub events) to be emitted or listened to.
-- **Workflow Pipeline Definition JSON**: Specify the step-by-step process definition structure matching the schema fields (`processId`, `module`, `label`, `entity`, `steps`, `statusEvent`, `dependsOn`, `requiredRole`, `requiredModule`, `requiredFeature`, `action`).
-  - **Dynamic Step Licensing**: For any steps that cross into separate modules or require specific packages, explicitly specify `requiredModule` and `requiredFeature` on the step level to enable self-healing, license-aware pipeline construction.
-  - State that this file must be saved in `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json` so it can be dynamically loaded, filtered, and validated.
-- **Notification Rule Seeds (Event-Driven Notifications)**: Define the database seeds (`NotificationRule`) for notifications triggered by this feature's events:
-  - **`event_type`**: The matching `UPPER_SNAKE_CASE` event emitted on the bus.
-  - **`channel`**: The target delivery medium (`IN_APP`, `EMAIL`).
-  - **`recipient_type`**: How to locate the recipient (`USER_ID`, `ROLE`, or `DYNAMIC_PATH`).
-  - **`recipient_path`**: JSONPath expression to extract recipient user IDs or email addresses dynamically from the event payload (e.g. `$.data.created_by` or `$.data.assigned_to`).
-  - **`title_template` / `body_template`**: Jinja2 strings interpolating event data attributes (e.g., `"New task assigned: {{ task_title }}"`).
-  - **`licensing`**: Assign licensing constraints to notification channels (e.g., `IN_APP` is Basic, but `EMAIL` is Pro/Premium, forcing upgrade checks if a tenant tries to enable or seed them).
+- **Pub/Sub Events**: Define event triggers (`UPPER_SNAKE_CASE` Pub/Sub events) to be emitted or listened to.
+- **Workflow Pipeline Definition**: If the feature uses a process pipeline, map out the step dependencies, roles, and status event hooks. The detailed JSON format and validation schema are governed by [1-backend-architecture.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/1-backend-architecture.md).
+- **Notification Rule Seeds**: Map out notifications to seed (associated event, target channel, recipient role, and template messages). The exact JSONPath payload resolution, Jinja2 template formatting rules, and channel licensing checks are governed by [1-backend-architecture.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/1-backend-architecture.md) and must not be repeated.
 
-## 6. RBAC Permissions & Licensing Guards
+## 6. RBAC Permissions & Licensing Tiers
 - **RBAC Matrix**: Define required roles and `<module>:<resource>:<action>` mappings.
-- **Licensing Configurations**: Define changes required under `core/core/packages.json` to assign this sub-feature to a specific tier (Basic, Pro, or Premium).
-- **API Guard Placement**: Specify precisely which endpoints or services will invoke `require_licensed_feature("<module>", "<subfeature>")`.
+- **Licensing Configurations**: Define feature packaging tier assignment (Basic, Pro, or Premium). All premium endpoints and features are automatically gated by standard licensing checks according to the rules.
 
 ## 7. Service Layer & Core Business Logic
 Define the business services structure, validation policies, and core transaction boundaries in the service layer (`services.py`).
 - **Domain Validation & Business Invariants Matrix**: List the precise business validation policies, preconditions, and exception triggers (e.g. unique constraints, state-transition rules, value limits) for each operational service.
-- **Service Method Specifications**: For each major database write/update service operation:
+- **Service Method Specifications**: For each major service operation:
   - **Method Signature**: Declare method name, parameters, and return type.
   - **Pre-conditions & Validations**: Specify checks performed before mutating the database state.
-  - **Calculations & Rounding Algorithms**: Define exact precision formulas, discount allocations, or rounding procedures (decimal-safe).
-  - **Database Actions & Transaction Boundaries**: Outline which models are read/updated, and confirm they run inside a unified database transaction block.
-  - **Post-conditions & Side-Effects**: Detail events emitted, notifications triggered, or synchronous updates to associated models.
+  - **Calculations & Rounding Algorithms**: Define business calculations, formulas, discount allocations, and rounding criteria (decimal-safe).
+  - **Database Actions & Side-Effects**: Detail models read/updated, events emitted, notifications triggered, or updates to associated models.
 
 ---
 

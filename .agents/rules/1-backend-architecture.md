@@ -1,3 +1,8 @@
+---
+trigger: always_on
+description: Technical architecture, Multi-Tenancy, DB schemas, transaction boundary, and security rules for all Python/FastAPI backend files in the bes-backend/ directory.
+---
+
 # 1. Backend Architecture & Security Rules — BES
 
 These rules govern all Python/FastAPI code and architectural patterns in the `bes-backend/` directory.
@@ -9,13 +14,20 @@ These rules govern all Python/FastAPI code and architectural patterns in the `be
 - **Naming**: Use `snake_case` for extensions, `<module>_<entity>s` for DB tables, and `UPPER_SNAKE_CASE` for events.
 
 ## 2. Extension Module Strict Layering
-Every extension MUST follow this structure:
+Every extension MUST follow a strict layer division (models, schemas, services, router, events, manifest). For simple extensions, these can be flat files:
 - **`models.py`**: ONLY database table classes inheriting from `BESBase`.
 - **`schemas.py`**: Pydantic `*Create` and `*Read` classes for API validation. NEVER use ORM models as API input.
 - **`services.py`**: All business logic, transaction safety, and cross-table operations.
 - **`router.py`**: Thin HTTP layer. Calls services. NO business logic.
 - **`events.py`**: Event bus subscribers and emitters.
 - **`manifest.py`**: MUST export a `manifest` instance of `ExtensionManifest`.
+
+### Scaling Up: Modular Package Structure
+When an extension module scales up with multiple sub-features or distinct business entities (e.g. `settings`), flat files should be modularized into directories (packages):
+- **Directories**: Replace flat files with directories named `models/`, `schemas/`, `services/`, and `router/`.
+- **Packaging (`__init__.py`)**: Each folder must contain an `__init__.py` file that re-exports its contents to preserve import compatibility from external packages (e.g., `from settings.models import CompanyProfile`).
+- **Routing Aggregation**: In `router/__init__.py`, initialize the main `APIRouter` (declaring the common prefix and tags) and use `.include_router()` to mount the sub-routers defined under the `router/` subdirectory (e.g. `company.py`, `user.py`), keeping routers thin and modular.
+
 
 ## 3. Database, Models, and Isolation (Multi-Tenancy)
 - **Base Inheritance**: ALL tables MUST inherit from `core.models.BESBase` (provides UUID `id`, `created_at`, `updated_at`, `created_by`, `is_deleted`, `subsidiary_id`, `metadata_`, `version_id`).

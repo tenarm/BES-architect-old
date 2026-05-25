@@ -1,3 +1,8 @@
+---
+trigger: always_on
+description: Mandates querying the Graphify knowledge graph at graphify-out/ to establish context before planning, architecting, or coding.
+---
+
 # Rule 3: Use Graphify for Context
 
 1. **Graphify as Source of Truth**: Before planning, architecting, or coding, you must use Graphify to establish the current state of the codebase.

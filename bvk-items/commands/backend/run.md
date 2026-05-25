@@ -16,30 +16,40 @@ Use `pdm` for backend commands once the environment is active.
 ## 1. Add a new extension
 
 ```bash
+# Scaffold a standard flat extension layout
 pdm run python scripts/add_extension.py --id sales --name Sales
-pdm run python scripts/add_extension.py --id supply_chain --name "Supply chain"
+
+# Scaffold a modular directory/package layout (recommended for large modules)
+pdm run python scripts/add_extension.py --id settings --name Settings --modular
 ```
 
-## 2. Onboard a client
+## 2. Remove an extension
+
+```bash
+# Completely delete an extension and revert its configurations
+pdm run python scripts/remove_extension.py --id sales --force
+```
+
+## 3. Onboard a client
 
 ```bash
 pdm run python scripts/onboard_client.py
 ```
 
-## 3. Change a client license plan
+## 4. Change a client license plan
 
 ```bash
 pdm run python scripts/change_license.py --client-id test_custom --plan basic
 pdm run python scripts/change_license.py --client-id test_custom --plan pro
 ```
 
-## 4. Run the FastAPI server for a client
+## 5. Run the FastAPI server for a client
 
 ```bash
 pdm run uvicorn instances.test_custom.test_custom.main:app --reload
 ```
 
-## 5. Docker deployment and orchestration
+## 6. Docker deployment and orchestration
 
 From the repo root:
 
@@ -70,7 +80,7 @@ cd /Users/bvk/BVK_Workspace/BES/bes-backend
 docker build -f instances/acme_inc/Dockerfile -t bes-backend-acme_inc:latest .
 ```
 
-## 6. Run backend tests (PDM workspace)
+## 7. Run backend tests (PDM workspace)
 
 ```bash
 pdm run test
@@ -80,7 +90,7 @@ pdm run test-extensions
 pdm run test-instances
 ```
 
-## 7. Run frontend tests (Nx workspace)
+## 8. Run frontend tests (Nx workspace)
 
 ```bash
 cd /Users/bvk/BVK_Workspace/BES/bes-frontend

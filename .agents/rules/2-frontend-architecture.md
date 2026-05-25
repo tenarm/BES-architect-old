@@ -1,3 +1,8 @@
+---
+trigger: always_on
+description: Frontend architecture, modular component registration, z-index matrices, CSS/TS standards, UI graceful degradation, and cognitive UX laws for all React/TypeScript files in the bes-frontend/ Nx monorepo.
+---
+
 # 2. Frontend Architecture & Security Rules — BES
 
 These rules govern all React/TypeScript code in the `bes-frontend/` Nx monorepo.
@@ -9,12 +14,16 @@ These rules govern all React/TypeScript code in the `bes-frontend/` Nx monorepo.
 - **ComponentRegistry**: Modules dynamically register their components in the Shell via `ComponentRegistry.register()` (e.g., `Route_FinanceMain`, `Widget_FinanceSummary`) during `init<Module>Module()`.
 
 ## 2. Process Transparency & Workflow
-- **Process Chain**: Use the `FloatingProcessPipeline` component for dynamic process transparency. It renders as a glassmorphic vertical stepper hydrated in real time via Server-Sent Events (SSE).
-- **Module-Level Pre-loading & Caching**: 
-  - To ensure rapid "first paint" UI speeds, process definitions MUST be pre-loaded dynamically upon navigation (e.g., inside the shell's `toggleModule`).
-  - Definitions are cached in `sessionStorage` under key `bes_module_procs_{module_name}` to allow the floating window to paint instantly, while live updates are stream-hydrated from SSE.
-- **Process Workflow**: Use the `Timeline` component for micro-level vertical activity feeds.
-- **Encapsulated Layering (Z-Index)**: Stacking layers are managed internally by `@bes/shared-ui` components (e.g., dynamic approval overlay modals use `9999`, `FloatingProcessPipeline` steppers use `9990`, sliding drawers use `9980`, and standard UI stays `<9980`). Custom modules MUST NOT hardcode or override `z-index` properties manually, ensuring uniform layer behavior.
+- **Encapsulated Layering (Z-Index)**: Stacking layers are managed internally by `@bes/shared-ui` components. Custom modules MUST NOT hardcode or override `z-index` properties manually, ensuring uniform layer behavior. Standard stacking indices:
+  - **Dynamic Approval / Upgrade Modals**: `9999`
+  - **Floating Process Pipeline**: `9990`
+  - **AI Floating Window**: `9985`
+  - **AI Capsule Button**: `9984`
+  - **Sliding Drawers**: `9980`
+  - **Base UI Elements**: `<9980`
+- **Macro Process Pipeline (`FloatingProcessPipeline`)**: Glassmorphic vertical stepper overlay loaded dynamically on demand. It is cached in `sessionStorage` (keyed by process ID) to enable immediate first paint and avoid layout shifting. It is hydrated live via Server-Sent Events (SSE) `/api/v1/notifications/stream` connection. Visual states must progress through: *Pending*, *Active*, *Waiting Approval*, *Complete*, and *Failed*.
+- **Micro Historical Logs (`Timeline`)**: A detailed chronological history feed rendered under a secondary "History" tab inside the side drawers or panels to preserve context.
+- **Approval Registry Modals**: Custom verification, override, or approval forms must be registered dynamically in the central `ComponentRegistry` to bind onto specific process pipeline steps.
 - Pending/Draft actions must surface on the Home Dashboard.
 
 ## 3. UI Degradation, Subscription Controls & The Money Rule

@@ -55,18 +55,14 @@ Summarize what is being built.
 
 ## 2. Architectural Compliance Sign-off
 Provide a checklist confirming adherence to the rules:
-- **Money Rule**: Currency columns configured with standard precision parameters (`Numeric(20,4)` in DB, `Decimal` in Python, and `decimal.js`/`big.js` in UI).
-- **Soft Deletes**: Active queries configured to filter by `is_deleted == False`.
-- **Database Architecture**: Core tables correctly extended and tenant bounds (`subsidiary_id`) strictly scoped.
-- **Subscription Tier Gate Check**: Confirm that licensing bounds are properly defined in `packages.json`, FastAPI endpoints enforce bounds using `require_licensed_feature()`, and the frontend UI gracefully degrades using lock 🔒 indicators and attractive upgrade overlays rather than throwing errors.
-- **Process Pipeline Configuration**: Verify that workflow definitions are saved in `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json`, steps align with backend events, and frontend triggers `loadModuleProcesses` dynamically.
-  - Verify that step-level licensing parameters (`requiredModule` or `requiredFeature`) are configured for any cross-module or gated steps to ensure clean backend self-healing.
-- **Layering Encapsulation Compliance**: Audit code/designs to ensure no hardcoded or custom inline `z-index` styles are added. Layering must rely entirely on internal stacking default configurations within `@bes/shared-ui` components.
-- **Event-Driven Notification Setup**: Verify that default database notification rule seeds (`NotificationRule`) are correctly defined for emitted Pub/Sub events:
-  - Channels are gated correctly based on tiers (e.g. `IN_APP` for basic, `EMAIL` gated to Pro/Premium).
-  - Templates utilize clean Jinja2 styling and recipient dynamic paths are properly set via JSONPath (e.g. `$.data.created_by`).
-  - The UI Notification Bell listens via the SSE `/stream` endpoint and handles micro-interactions (vibration/pulsing) and metadata-driven navigation.
-- **Service Layer & Business Logic Design**: Verify that core business logic, domain validation rules, service method signatures, transaction boundaries, and calculations/formulas are mapped out in Section 7 of `3-backend-plan.md` to ensure they are implemented in the service layer (`services.py`) and not the thin router layer.
+- **Money Rule**: Confirm that currency columns, pricing variables, and mathematical operations follow the standard precision and rounding rules defined in [1-backend-architecture.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/1-backend-architecture.md) and [2-frontend-architecture.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/2-frontend-architecture.md).
+- **Soft Deletes**: Confirm that active database queries filter by soft deletion and tables inherit from `BESBase` per the backend rules.
+- **Database Multi-Tenancy**: Confirm that core tables are correctly extended and tenant bounds (`subsidiary_id`) are strictly scoped.
+- **Subscription Tier Gates**: Confirm that packaging tier assignments are mapped, and premium endpoints are gated per the licensing rules without crashes.
+- **Process Pipeline Configuration**: Confirm that workflow steps and roles are mapped, steps are license-aware, and frontend displays use the standard process overlays.
+- **Layering Encapsulation Compliance**: Confirm that there are no custom or hardcoded `z-index` properties, relying entirely on the standard stack layer matrix in [2-frontend-architecture.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/2-frontend-architecture.md).
+- **Event-Driven Notifications**: Confirm that events and notification mappings are planned, and templates adhere to channel rules.
+- **Service Layer Business Logic**: Confirm that all validations, invariants, calculation algorithms, and service method signatures are planned to reside strictly in the service layer (`services.py`) rather than the router.
 
 ## 3. Cross-Module Dependencies & Shared Reference Registry
 

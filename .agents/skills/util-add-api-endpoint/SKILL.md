@@ -10,17 +10,17 @@ This skill walks you through adding a new API endpoint to an existing extension 
 ---
 
 ## Prerequisites
-- The extension module already exists with the standard file structure
+- The extension module already exists with the standard file structure (either flat files or modular package directories)
 - You know which entity/resource the endpoint operates on
 
 ## Steps
 
 ### Step 1: Define the Schema (if new)
 
-Add request/response schemas to `schemas.py`:
+Add request/response schemas to `schemas.py` (or the appropriate file inside the `schemas/` package if modularized):
 
 ```python
-# extensions/<module>/schemas.py
+# extensions/<module>/schemas.py (or schemas/<entity>.py)
 
 class NewEntityCreate(SQLModel):
     """Input schema — only fields the user should provide."""
@@ -38,10 +38,10 @@ class NewEntityRead(SQLModel):
 
 ### Step 2: Add Business Logic to Service Layer
 
-Add the function to `services.py`:
+Add the function to `services.py` (or the appropriate file inside the `services/` package if modularized):
 
 ```python
-# extensions/<module>/services.py
+# extensions/<module>/services.py (or services/<entity>.py)
 
 async def do_business_operation(
     session: AsyncSession,
@@ -67,10 +67,10 @@ async def do_business_operation(
 
 ### Step 3: Add the Route to Router
 
-Add the endpoint to `router.py`:
+Add the endpoint to `router.py` (or the appropriate file inside the `router/` package if modularized):
 
 ```python
-# extensions/<module>/router.py
+# extensions/<module>/router.py (or router/<entity>.py)
 
 from .schemas import NewEntityCreate
 from .services import do_business_operation
