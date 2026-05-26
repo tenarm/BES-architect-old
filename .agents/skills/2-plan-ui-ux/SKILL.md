@@ -49,6 +49,9 @@ State the module and feature.
 ## 2. Information Architecture
 Describe the hierarchy of pages, tabs, and drawer panels for the feature. 
 *Compliance Check:* Outline how this architecture supports a **System-Directed Mental Model** matching the rest of the application.
+*Context-Aware Routing & Navigation:*
+- **Dedicated Route Mapping**: Align navigation with user expectations. If a sub-feature has a dedicated sidebar entry point (e.g., User Management), it deserves a dedicated page component to prevent layout overload. Minor, tightly-coupled settings (e.g., Tax Profiles, Calendars) should be consolidated into unified setup hubs (like Company Setup) to keep the sidebar clean.
+- **Clean Content Partitioning**: Choose layout elements based on logical depth. Use horizontal tabs (`TabGroup`) to pivot between parallel datasets (e.g., Users vs. Roles). Use drawers or split-screens for detail drilling, maintaining a flat navigation structure without nested side bars.
 
 ## 3. Process Chain & Workflow
 - **Macro View (`FloatingProcessPipeline`)**: Map out the visual process states (Pending, Active, Waiting Approval, Complete, Failed) for high-level workflow milestones.
@@ -60,13 +63,17 @@ Map out exactly which `@bes/shared-ui` components will be used. Do not propose c
 ## 5. UI-UX Flow & Walkthrough
 Detail the step-by-step interactive UI-UX flow and visual states:
 - **Interactive UI-UX Flow (User Journey)**: Describe the step-by-step user path from entering the screen, opening drawers/panels, mutating state, and closing interactions.
+- **Context-Driven Layout Selection**: Explain why specific layout elements were selected:
+  - *Side Drawers*: Best for side-by-side editing, auditing (Timeline), or inspecting items without losing grid context.
+  - *Modals*: Best for transaction overrides, confirmation alerts, or quick standalone actions (e.g., password reset).
+  - *Split-Screen / Dual Panels*: Best for high-frequency data entry where parent records and child grids must remain permanently visible.
 - **Empty States**: Design for clean, empty-state illustrations with clear Call-to-Actions (CTAs) guiding users to create their first record.
 - **Loading Skeletons**: Map out modern skeleton loading layouts matching the data structure to keep user perception fast.
 - **Data Table Columns**: Structure columns to maximize **Density Over Whitespace** with tight paddings and visual status tags.
-- **Form Inputs & Persistent Context**: Explain how forms are laid out in drawers/panels side-by-side with the main grid, preserving context.
+- **Form Inputs & Progressive Disclosure**: For forms exceeding 5-7 fields, detail how progressive disclosure (e.g., collapsible sections, tabs, or step wizards) is used to avoid cognitive overload.
 
 ## 6. Cognitive UX Design Compliance
-Confirm that all page layouts, chunked forms, button placements, validation helpers, and split-screen side drawers adhere fully to the cognitive UX rules (Miller's Law, Fitts's Law, Error-Forgiving Design, Aesthetic-Usability Effect, Density Over Whitespace, and Persistent Context) defined in [2-frontend-architecture.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/2-frontend-architecture.md).
+Explain how the design balances density and usability by applying cognitive UX principles (Miller's Law, Fitts's Law, Error-Forgiving Design, Aesthetic-Usability Effect, Density Over Whitespace, and Persistent Context) in a smart, integrated way as defined in [2-frontend-architecture.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/2-frontend-architecture.md).
 
 ---
 

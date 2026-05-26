@@ -99,3 +99,20 @@ npx nx test shared-ui
 npx nx e2e shell-e2e
 npx nx affected -t test
 ```
+
+## 9. Plan Tier & Licensing Controls
+
+### Local Plan Tier Simulation (Development Only)
+In local development, pages like `Settings` and `User Management` display a **Plan Tier** dropdown in the header. 
+- **Purpose**: Allows developers to dynamically swap active plans (`Basic`, `Pro`, `Premium`) to test premium lock indicators 🔒, upgrade modal popups, and UI lock behaviors in real time.
+- **Production Gating**: The dropdown is wrapped in an `import.meta.env.DEV` condition and is automatically excluded from all production builds.
+
+### Managing License Plans (Production / Testing)
+To change the official plan tier of a client instance:
+```bash
+# Go to backend workspace
+cd /Users/bvk/BVK_Workspace/BES/bes-backend
+
+# Update instance license plan (basic, pro, or premium)
+pdm run python scripts/change_license.py --client-id <client-id> --plan <plan-type>
+```
