@@ -86,3 +86,18 @@ To keep the global store clean, organized, and informative, every module/feature
 1. **Graphify Verification**: The plan reviewer MUST run `graphify path` or `graphify query` to verify that proposed external dependencies or shared assets actually exist (or are planned) before referencing them.
 2. **Circular Prevention**: Standard extension modules MUST NOT directly import or call each other. All inter-module actions must be event-driven via the Event Bus, or queried dynamically at runtime.
 3. **Lookup Registry Maintenance**: Before designing or proposing a new helper service, table, or UI component, the plan reviewer must consult `common-dependants.md` to see if a similar reusable asset has already been exposed. If it exists, the proposed plan must reuse it.
+
+---
+
+## 10. Value-Driven Planning Principle (Core Transactional Value vs. Advanced Governance)
+To prevent feature bloat and ensure high usability, planners must strictly prioritize core value-creating actions:
+- **Core Transactional Value (CTV)**: Define the absolute minimum data fields, database schemas, and simple CRUD paths needed for basic operations (e.g., creating a supplier profile to write a purchase order). This belongs in the Basic/Standard tier.
+- **Advanced Efficiency & Governance (AEG)**: Move heavy automation, multi-role verification pipelines, complex scorecards, and third-party integrations to Pro/Premium tiers.
+- **Graceful Isolation**: Core transactional paths must execute successfully even if optional AEG side-effects (like scoring calculations or external checks) fail.
+
+## 11. SME-less Validation & Defensive Planning Rules
+To avoid building non-standard, impractical, or incorrect workflows when human Subject Matter Experts (SMEs) are unavailable:
+- **Benchmark Against Industry Standards**: Base all database schemas, financial calculations, and state machines on open standards (e.g., GAAP/IFRS for Finance, APICS/ASCM for Supply Chain) and reference open ERP platforms (e.g., Odoo, ERPNext).
+- **The Defensive Planning Rule**: When in doubt or lacking SME validation, default to manual user inputs (e.g., a simple text field or dropdown) rather than complex, automated heuristics. Simple manual inputs are safe and standard, while automated algorithms designed without SME feedback risk breaking real-world operations.
+- **Mandatory Reference Citations**: Planners must document the standard reference or ERP benchmark pattern that justifies any complex state machine, status hold, or core calculation.
+

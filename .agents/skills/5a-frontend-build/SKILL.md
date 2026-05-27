@@ -46,7 +46,8 @@ When asked to build the frontend:
 9. Wire up process loading: ensure module navigation routes hook into `loadModuleProcesses` dynamically to populate `sessionStorage`.
 10. Delegate layering to `@bes/shared-ui` components. Do not hardcode or override `z-index` values in local component styles.
 11. Enforce all UX laws and cognitive load reductions from `.agents/rules/2-frontend-architecture.md` (Aesthetic-Usability, Miller's Law, Fitts's Law, Error-Forgiving Design, Density Over Whitespace, and Persistent Context side panels/drawers).
-12. Keep code beginner-friendly: write functional components, use descriptive variable names, provide extensive inline documentation for state logic, and expose clear TypeScript interfaces.
+12. **Prioritize Basic Core First**: Implement and verify the basic transactional UI (simple lists and creation forms) before spending cycles on advanced indicators, complex tabs, or premium overlays.
+13. Keep code beginner-friendly: write functional components, use descriptive variable names, provide extensive inline documentation for state logic, and expose clear TypeScript interfaces.
 
 ---
 

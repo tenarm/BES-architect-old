@@ -71,6 +71,8 @@ Detail the step-by-step interactive UI-UX flow and visual states:
 - **Loading Skeletons**: Map out modern skeleton loading layouts matching the data structure to keep user perception fast.
 - **Data Table Columns**: Structure columns to maximize **Density Over Whitespace** with tight paddings and visual status tags.
 - **Form Inputs & Progressive Disclosure**: For forms exceeding 5-7 fields, detail how progressive disclosure (e.g., collapsible sections, tabs, or step wizards) is used to avoid cognitive overload.
+- **Core Transactional Value UI Focus**: Prioritize the basic CRUD views (simple list grids, basic input forms) to keep the primary interface uncluttered. Move premium/complex elements (such as OTIF widgets, document drawers, or multi-step approval stages) into separate tabs, collapsible panels, or gated upgrade overlays.
+
 
 ## 6. Cognitive UX Design Compliance
 Explain how the design balances density and usability by applying cognitive UX principles (Miller's Law, Fitts's Law, Error-Forgiving Design, Aesthetic-Usability Effect, Density Over Whitespace, and Persistent Context) in a smart, integrated way as defined in [2-frontend-architecture.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/2-frontend-architecture.md).

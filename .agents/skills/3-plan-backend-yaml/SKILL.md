@@ -76,6 +76,7 @@ Define the business services structure, validation policies, and core transactio
   - **Pre-conditions & Validations**: Specify checks performed before mutating the database state.
   - **Calculations & Rounding Algorithms**: Define business calculations, formulas, discount allocations, and rounding criteria (decimal-safe).
   - **Database Actions & Side-Effects**: Detail models read/updated, events emitted, notifications triggered, or updates to associated models.
+  - **CTV Transactional Isolation**: Design service methods so that core transactions (e.g. creating/updating basic entities) are isolated from optional, premium side-effects (e.g. complex scorecard computations, external lookups). If advanced logic fails, ensure the core database mutation still succeeds gracefully.
 
 ---
 

@@ -27,6 +27,7 @@ STEP 6: 6-bug-fixing            →  BUG FIXES
 ## Senior ERP Transformation Persona Guidelines
 When planning, adopt the mindset of an enterprise transformation expert with 25+ years of experience:
 - **Business Value & ROI**: Challenge features that do not solve a real, measurable, and recurring business problem.
+- **Value-Driven Focus (Core Transactional Value vs. Advanced Governance)**: Challenge features that do not represent the absolute minimum path to value. Isolate basic data capturing and operations (Core Transactional Value) from complex automation, checks, and tracking (Advanced Efficiency & Governance).
 - **Operational Reality**: Evaluate if employees will actually use the feature under production pressure, or if it introduces unnecessary friction, manual overhead, or excessive change management.
 - **ERP Normalization**: Prevent duplicate masters, data silos, and custom code where standard configuration or existing system modules can solve the problem.
 - **Topological Build Alignment**: Identify which settings or master data features are prerequisites, ensuring Stage 1 (settings/configs) is completed before downstream transactional features are proposed.
@@ -54,7 +55,7 @@ When asked to plan functionalities:
    - *Immutable Ledger Postings*: Sub-ledger posting logic, double-entry offset rules, and period-close validation check gates.
    - *Integration & Failover Bounds*: Dependencies on third-party APIs, and stubs or mocks required for offline/stage testing.
    - *Analytical Reporting workloads*: Real-time vs. batch metrics, aggregation logic, and read-optimized views.
-5. **Prioritize Rigorously**: Classify all functionalities into: **Critical**, **Important**, **Optional**, **Future consideration**, or **Reject / Unnecessary**. Explain clearly why any item is rejected or deprioritized.
+5. **Prioritize Rigorously**: Classify all functionalities into: **Critical**, **Important**, **Optional**, **Future consideration**, or **Reject / Unnecessary**. Explicitly separate the Core Transactional Value (for the Basic/Standard tier) from Advanced Efficiency & Governance capabilities (Pro/Premium). Explain clearly why any item is rejected or deprioritized.
 6. Generate the 8-section `1-functionalities.md` document below.
 7. Save to `features-plan/<module-name>/<feature-name>/1-functionalities.md`.
 
@@ -73,6 +74,8 @@ Provide a clear architectural assessment of the feature:
 - **Business & Operational Assessment**: Analysis of real-world user adoption, potential operational friction, and workflow reality under production pressure.
 - **ERP Design Principles & Normalization**: Analysis of configurable vs custom-built balance, database normalization, and how the feature avoids duplicate masters/data silos.
 - **Compliance & Technical Risks**: Specific compliance (e.g. audit trails, SOX), data integrity, security, and migration risks identified for this feature.
+- **Industry Reference Benchmarks**: Cite the open industry standards (e.g. GAAP/IFRS, APICS/ASCM) or reference ERP design templates (e.g., Odoo, ERPNext) used to validate the schemas, state flows, and calculations to ensure they align with proven operational logic.
+- **Defensive Planning Review**: Identify any complex automated heuristics that were simplified to manual configurations or simple user inputs to mitigate the risk of building incorrect automated operations without SME validation.
 
 ## 4. Master Data Governance & Reference Ownership
 Trace governance boundaries:

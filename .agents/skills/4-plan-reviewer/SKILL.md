@@ -63,6 +63,8 @@ Provide a checklist confirming adherence to the rules:
 - **Layering Encapsulation Compliance**: Confirm that there are no custom or hardcoded `z-index` properties, relying entirely on the standard stack layer matrix in [2-frontend-architecture.md](file:///Users/bvk/BVK_Workspace/BES/.agents/rules/2-frontend-architecture.md).
 - **Event-Driven Notifications**: Confirm that events and notification mappings are planned, and templates adhere to channel rules.
 - **Service Layer Business Logic**: Confirm that all validations, invariants, calculation algorithms, and service method signatures are planned to reside strictly in the service layer (`services.py`) rather than the router.
+- **CTV Core Isolation**: Confirm that the implementation roadmap isolates the Core Transactional Value (CTV) features (Basic tier CRUD and data recording) into Step 1 of the implementation sequence, leaving advanced integrations, scorecards, and multi-step approvals to later steps or premium-gated wrappers.
+
 
 ## 3. Cross-Module Dependencies & Shared Reference Registry
 

@@ -44,7 +44,8 @@ When asked to build the backend:
 6. Apply RBAC permissions and wire up Pub/Sub events.
 7. Save workflow pipeline definition schemas in `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json` to register them automatically with the core dynamic scanner.
 8. Enforce all backend architectural and security rules from `.agents/rules/1-backend-architecture.md` (Beginner-Friendly & Self-Documenting Design, Error-Forgiving API Design, soft-deletes).
-9. Keep backend code beginner-friendly: write explicit docstrings, use typed variables, avoid overly complex SQLAlchemy operations, and structure services/repositories clearly with detailed inline comments.
+9. **Prioritize Basic Core First**: Implement and test the core database models and basic CRUD endpoints (the Core Transactional Value) to establish the primary data loop before writing complex background event listeners, scorecard updates, or notification seeds.
+10. Keep backend code beginner-friendly: write explicit docstrings, use typed variables, avoid overly complex SQLAlchemy operations, and structure services/repositories clearly with detailed inline comments.
 
 
 ---
