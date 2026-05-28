@@ -38,10 +38,21 @@ class NewEntityRead(SQLModel):
 
 ### Step 2: Add Business Logic to Service Layer
 
-Add the function to `services.py` (or the appropriate file inside the `services/` package if modularized):
+Add the function to `services.py` (or the appropriate file inside the `services/` package if modularized).
+
+> **IMPORTANT**: Per Rule 1 §14, services MUST NOT raise `HTTPException`. Raise domain-specific exceptions instead.
 
 ```python
 # extensions/<module>/services.py (or services/<entity>.py)
+
+# Define domain exceptions at top of file (or in a shared exceptions.py)
+class InvalidAmountError(Exception):
+    """Raised when a financial amount violates business rules."""
+    pass
+
+class EntityNotFoundError(Exception):
+    """Raised when a requested entity does not exist."""
+    pass
 
 async def do_business_operation(
     session: AsyncSession,
@@ -49,13 +60,13 @@ async def do_business_operation(
 ) -> NewEntity:
     """
     Service function with:
-    - Input validation
+    - Input validation via domain exceptions
     - Business rules
-    - Transaction safety
+    - Transaction safety (service owns the commit)
     """
-    # Validate business rules
+    # Validate business rules — raise domain exceptions, NOT HTTPException
     if data.amount < 0:
-        raise HTTPException(status_code=400, detail="Amount must be positive")
+        raise InvalidAmountError("Amount must be positive")
     
     # Create the entity
     db_obj = NewEntity.model_validate(data)
@@ -67,13 +78,13 @@ async def do_business_operation(
 
 ### Step 3: Add the Route to Router
 
-Add the endpoint to `router.py` (or the appropriate file inside the `router/` package if modularized):
+Add the endpoint to `router.py`. The router catches domain exceptions and translates them to HTTP responses:
 
 ```python
 # extensions/<module>/router.py (or router/<entity>.py)
 
 from .schemas import NewEntityCreate
-from .services import do_business_operation
+from .services import do_business_operation, InvalidAmountError, EntityNotFoundError
 
 # For LIST endpoints — always include pagination
 @router.get("/new-entities")
@@ -95,13 +106,16 @@ async def list_new_entities(
     
     return paginated_response(data=items, total=total, page=pagination.page, page_size=pagination.page_size)
 
-# For CREATE endpoints — use Create schema
+# For CREATE endpoints — catch domain exceptions in router
 @router.post("/new-entities")
 async def create_new_entity(
     data: NewEntityCreate,
     session: AsyncSession = Depends(get_async_session)
 ):
-    item = await do_business_operation(session, data)
+    try:
+        item = await do_business_operation(session, data)
+    except InvalidAmountError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return success_response(data=item)
 
 # For DETAIL endpoints — validate existence

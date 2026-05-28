@@ -1,7 +1,3 @@
----
-trigger: always_on
-description: End-to-end subscription plan tier retrieval, local state caching flow, and frontend package licensing gate verification rules.
----
 
 # 6. Licensing & Subscription Tier Flow — BES
 

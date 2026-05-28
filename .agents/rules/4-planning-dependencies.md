@@ -1,103 +1,155 @@
 ---
 trigger: always_on
-description: Scope definition, topological build stages, inbound/outbound dependencies, master data governance, and ledger rules governing planning and plan reviews.
+description: Flow-based planning pipeline, dependency management, build staging, and cross-flow reference registry governing how TenArm features are planned and documented.
 ---
 
-# 4. Planning & Dependency Management Rules — BES
+# 4. Planning & Dependency Management Rules — TenArm
 
-These rules govern how feature plans, cross-module dependencies, and shareable references are reviewed, documented, and stored, especially for massive applications built in stages.
-
----
-
-## 1. Domain-Only Feature Planning Principle
-To maintain clean, focused, and high-value documentation, feature planning documents (`1-functionalities.md`, `2-ui-ux-flow.md`, `3-backend-plan.md`, `proposed-plan.md`) must **strictly focus on domain-specific business logic, processes, columns, and invariants**. 
-Feature plans **MUST NOT duplicate or repeat generic mechanical/framework rules** (such as technical money-rule database/code declarations, soft delete queries, standard API response envelopes, sessionStorage caching mechanisms, and CSS z-indexes). These framework rules are defined globally in these central Rules files, which serve as the absolute, non-negotiable source of truth for the entire coding chassis.
+These rules govern how flows are planned, documented, and tracked before implementation.
 
 ---
 
-## 2. Scope and Purpose of proposed-plan.md & common-dependants.md
-- **`proposed-plan.md`**: Generated for each feature under `features-plan/<module>/<feature>/`. It acts as the final architectural road-map before build step implementation.
-- **`features-plan/common-dependants.md`**: The global, shared reference registry for all cross-module interactions, configuration mappings, and reusable assets. It serves as the single source of truth to ensure the application build progress remains on track.
+## 1. Flow-First Planning Principle
+All feature planning is organized around **Flows**, not modules. A flow spans multiple backend modules and produces a single, cohesive user experience.
+
+- **Planning unit**: A Flow (e.g., "Sell", "Buy"), not a module (e.g., "Sales", "Inventory").
+- **Planning artifacts**: Live under `features-plan/flows/<flow_id>/`.
+- **Module-level concerns** (data models, API schemas) are addressed WITHIN the flow plan — they are not separate planning exercises.
 
 ---
 
-## 3. Staged Building of Massive Applications
-To prevent development bottlenecks and maintain pipeline integrity in a multi-stage enterprise build, features must align with the system's topological order:
+## 2. Planning Directory Structure
 
-1. **Stage 1 (Core Foundations & Global Settings)**: Auth, Subsidiaries, Users, Roles, currencies, base UOM, and master configuration entities.
-2. **Stage 2 (Master Data Management - MDM)**: Customer Master, Supplier Master, Item Master.
-3. **Stage 3 (Domain Transaction Modules)**: Inventory counts, Sales Orders, Purchase Orders, General Ledger.
-4. **Stage 4 (Advanced Pipelines & Cross-Module Features)**: Process approval pipelines, automated ledger reconciliations, cross-extension triggers.
-
----
-
-## 4. Inbound vs. Outbound Dependencies
-Every feature review must identify and document the following dependency categories:
-
-*   **Required External Dependencies (Inbound / Prerequisites)**:
-    *   **Domain & Schema-Level References**: Specific database entities, foreign keys, or configuration parameters defined in previous modules (e.g., a Sales Order requiring `subsidiary_id` from Settings and `item_id` from Inventory).
-    *   **External APIs & Services**: Backend service methods, endpoints, or data models consumed from other extensions (e.g., Sales Credit checks querying Finance aging reports).
-    *   **Pre-requisite Build Steps**: Explicitly list which files/endpoints MUST be implemented first before the current feature can compile and run.
-*   **Exposed Reusable Assets & Shared Reference Notes (Outbound / Shareable)**:
-    *   **Shareable Entities & Fields**: Database columns, lookup tables, and enum structures that other modules will import or reference.
-    *   **APIs & Hooks**: Shared backend routes (e.g., active catalog lookups) or frontend hooks/stores.
-    *   **Shared UI Elements & Utilities**: Generic widgets and helper functions built in this feature that can be extracted to `@bes/shared-ui` or referenced in upcoming stages.
+```
+features-plan/
+├── flows/
+│   ├── sell/
+│   │   ├── 1-flow-definition.md      ← Steps, entities, business rules
+│   │   ├── 2-flow-ui-design.md       ← Screens, layouts, component mapping
+│   │   ├── 3-flow-backend-plan.md    ← Models, APIs, services, events
+│   │   ├── proposed-plan.md          ← Reviewed & approved implementation plan
+│   │   └── flow-definition.json      ← Machine-readable flow pipeline definition
+│   ├── buy/
+│   ├── stock/
+│   └── ...
+├── data-hub/
+│   └── <entity>/                     ← Entity-specific Data Hub plans if needed
+├── common-dependants.md              ← Cross-flow dependency registry
+└── deferred-architecture.md          ← Future features parked for later
+```
 
 ---
 
-## 5. Loose Coupling and "Ghost Foreign Keys"
-To prevent circular database dependencies and migration deadlocks across extension modules:
-- Standard extensions must not use hard PostgreSQL-level foreign keys referencing other standard extensions.
-- Use **Ghost Foreign Keys**: Store references to other extension entities (e.g., a Purchase Order referencing an Inventory Item) inside a JSONB column (`metadata_` on `BESBase`) or validate dynamically via services at runtime.
-- **Stubs & Mocks**: If a required feature from another module is not yet implemented (building in stages), the proposed plan must specify the API stub or repository mock required to unblock development without going off track.
+## 3. Sequential Planning Pipeline (Skills)
+
+Every flow MUST go through this 5-step pipeline before implementation:
+
+| Step | Skill | Input | Output |
+|:-----|:------|:------|:-------|
+| 1 | `1-plan-flow` | Flow name + description | `1-flow-definition.md` — steps, entities, business rules, validations |
+| 2 | `2-design-flow-ui` | Flow definition | `2-flow-ui-design.md` — screens, layouts, component specs |
+| 3 | `3-plan-flow-backend` | Flow definition + UI design | `3-flow-backend-plan.md` — models, schemas, APIs, services, events |
+| 4 | `4-review-flow` | All 3 docs + rules | `proposed-plan.md` — reviewed implementation plan ready for approval |
+| 5 | `5-build-flow` | Approved proposed-plan | Working code — backend + frontend built together |
+
+> Each skill can be run independently. Run them in order for a complete flow from planning to code.
 
 ---
 
-## 6. Master Data Governance (MDM) Rules
-To maintain a single source of truth across staging phases:
-- **System of Record (SoR)**: Every master entity (e.g., Tax Code, Employee Record, Item Master) must have exactly one owner module. Other modules must access this data read-only.
-- **Change Control Gates**: Critical master fields (e.g., Customer Credit Limit, Vendor Bank Details) must not allow direct database edits. All modifications must route through designated approval workflows or trigger notification alerts.
+## 4. Flow Definition Document (`1-flow-definition.md`)
+
+Every flow definition MUST contain:
+
+1. **Flow Identity**: ID, display name, description, icon, tier, primary module, supporting modules.
+2. **Default Pipeline**: Ordered list of steps with type, entity, status event, dependencies, and skippability.
+3. **Entities Involved**: List of database entities this flow creates/modifies, with their key fields.
+4. **Business Rules**: Validation rules, constraints, calculations, and invariants specific to this flow.
+5. **State Machine**: The valid status transitions for the flow's primary entity (e.g., Draft → Confirmed → Shipped → Invoiced).
+6. **Cross-Module Events**: Events emitted at each step and the expected subscribers.
+7. **Data Hub Entities**: Which Data Hub views this flow feeds data into.
 
 ---
 
-## 7. Financial, Compliance & Ledger Posting Rules
-- **Immutable Ledgers**: Transactional records affecting stock, financials, or assets must post to write-once, read-many sub-ledgers. Corrections must use offset reversal transactions; direct UPDATE/DELETE operations on posted ledgers are forbidden.
-- **UOM & Currency Scaling**: Transactional conversion rules and exchange rate variance mappings must be explicitly planned at the schema and service level.
-- **Period Close Gates**: Financial and inventory transaction services must validate accounting period lock status before writing postings.
+## 5. Staged Build Order
+
+Flows are built in dependency order. A flow that needs data from another flow must wait for that flow to be built first.
+
+### Phase 1: Foundation
+- Settings (Company, Users, RBAC)
+- Design System & Core Components
+
+### Phase 2: Core Transactions
+- **Sell Flow** — requires: Settings, Customers (Data Hub), Products (Data Hub)
+- **Buy Flow** — requires: Settings, Suppliers (Data Hub), Products (Data Hub)
+- **Stock Flow** — requires: Products, Warehouses
+
+### Phase 3: Financial
+- **Money Flow** — requires: Sell Flow (invoices), Buy Flow (bills)
+
+### Phase 4: People & CRM
+- **People Flow** — independent (HR module)
+- **Customers Flow** — independent (CRM module)
+
+### Phase 5: Advanced
+- **Manufacture Flow** — requires: Products, Stock, Buy
+- **Projects Flow** — requires: People
+- **Assets Flow** — independent
+- **Support Flow** — independent
 
 ---
 
-## 8. Formatting of common-dependants.md
-To keep the global store clean, organized, and informative, every module/feature entry in `common-dependants.md` MUST follow this exact structure:
-- Organize under `## <Module Name> Module` -> `### Feature: <Feature Name>`.
-- Provide a clean, tabular presentation for both inbound and outbound dependencies.
+## 6. Cross-Flow Dependencies (`common-dependants.md`)
 
-### A. Required External Dependencies (Inbound / Prerequisites)
-| Target Module | Dependent Entity / Feature | Dependency Description | Impact / Mitigation & Pre-requisite Build Order |
+This file is the global registry of what each flow **needs** (inbound) and **produces** (outbound). It is **auto-maintained** by the skills pipeline — do NOT edit manually.
+
+### Lifecycle
+- **Created/Drafted** by Skill 1 (`1-plan-flow`), Step 9 — when a flow is first planned, its expected dependencies and outbound assets are registered.
+- **Finalized** by Skill 5 (`5-build-flow`), Step 14 — after the code is built, entries are updated with verified event names, table names, and API endpoints from the actual code.
+
+### Structure
+Organize under `## Flow: <Flow Name>` with two tables:
+
+#### A. Required External Dependencies (Inbound)
+| Source Flow/Module | Dependency | Description | Phase |
 | :--- | :--- | :--- | :--- |
 
-### B. Exposed Reusable Assets & Shared Reference Notes (Outbound / Shareable)
-| Shareable Entity / Utility | Target Consumers | Asset Description | Integration & Reference Notes for Upcoming Stages |
+#### B. Exposed Assets (Outbound)
+| Asset | Consumers | Description | Notes |
 | :--- | :--- | :--- | :--- |
 
 ---
 
-## 9. Architectural Rules for Dependency Verification
-1. **Graphify Verification**: The plan reviewer MUST run `graphify path` or `graphify query` to verify that proposed external dependencies or shared assets actually exist (or are planned) before referencing them.
-2. **Circular Prevention**: Standard extension modules MUST NOT directly import or call each other. All inter-module actions must be event-driven via the Event Bus, or queried dynamically at runtime.
-3. **Lookup Registry Maintenance**: Before designing or proposing a new helper service, table, or UI component, the plan reviewer must consult `common-dependants.md` to see if a similar reusable asset has already been exposed. If it exists, the proposed plan must reuse it.
+## 7. Domain-Only Planning Content
+Flow plans MUST focus on domain-specific business logic, not framework mechanics:
+
+**Include**: Entity fields, business validations, status transitions, calculation formulas, approval conditions, user-facing labels and descriptions.
+
+**Exclude**: CSS z-index values, JSON envelope format, soft-delete query patterns, BESBase fields, import ordering — these are governed by the Rules files.
 
 ---
 
-## 10. Value-Driven Planning Principle (Core Transactional Value vs. Advanced Governance)
-To prevent feature bloat and ensure high usability, planners must strictly prioritize core value-creating actions:
-- **Core Transactional Value (CTV)**: Define the absolute minimum data fields, database schemas, and simple CRUD paths needed for basic operations (e.g., creating a supplier profile to write a purchase order). This belongs in the Basic/Standard tier.
-- **Advanced Efficiency & Governance (AEG)**: Move heavy automation, multi-role verification pipelines, complex scorecards, and third-party integrations to Pro/Premium tiers.
-- **Graceful Isolation**: Core transactional paths must execute successfully even if optional AEG side-effects (like scoring calculations or external checks) fail.
+## 8. Deferred Architecture (`deferred-architecture.md`)
+Features that are planned but not in the current build phase are tracked here. Each entry has:
+- Feature description
+- Which flow it belongs to
+- Prerequisites / dependencies
+- Target tier (Basic/Pro/Premium)
+- Reason for deferral
 
-## 11. SME-less Validation & Defensive Planning Rules
-To avoid building non-standard, impractical, or incorrect workflows when human Subject Matter Experts (SMEs) are unavailable:
-- **Benchmark Against Industry Standards**: Base all database schemas, financial calculations, and state machines on open standards (e.g., GAAP/IFRS for Finance, APICS/ASCM for Supply Chain) and reference open ERP platforms (e.g., Odoo, ERPNext).
-- **The Defensive Planning Rule**: When in doubt or lacking SME validation, default to manual user inputs (e.g., a simple text field or dropdown) rather than complex, automated heuristics. Simple manual inputs are safe and standard, while automated algorithms designed without SME feedback risk breaking real-world operations.
-- **Mandatory Reference Citations**: Planners must document the standard reference or ERP benchmark pattern that justifies any complex state machine, status hold, or core calculation.
+This document prevents scope creep while ensuring nothing is forgotten.
 
+---
+
+## 9. Value-Driven Flow Planning
+- **Core Transactional Value (CTV)**: Define the minimum viable steps for a flow to be useful. This ships in the Basic tier.
+- **Advanced Governance (AEG)**: Approval gates, automation hooks, advanced validations — these are Pro/Premium additions to the same flow, not separate features.
+- **Progressive Complexity**: A flow starts simple (3-5 steps) and grows via the Pipeline Editor. Never ship a 10-step flow when a 5-step flow covers 90% of users.
+
+---
+
+## 10. SME-less Validation Rules
+When building without domain experts:
+- Benchmark flows against industry standards (GAAP/IFRS for finance, APICS for supply chain).
+- Reference open-source ERP patterns (Odoo, ERPNext) for step sequences and entity schemas.
+- Default to manual user input over automated heuristics when uncertain.
+- Document the reference source for every complex business rule or status machine.

@@ -1,81 +1,160 @@
 ---
 trigger: always_on
-description: Frontend architecture, modular component registration, z-index matrices, CSS/TS standards, UI graceful degradation, and cognitive UX laws for all React/TypeScript files in the bes-frontend/ Nx monorepo.
+description: Frontend architecture, Warm Professional design system, flow-centric navigation, Data Hub patterns, core component requirements, and UX laws for all React/TypeScript files in the bes-frontend/ Nx monorepo.
 ---
 
-# 2. Frontend Architecture & Security Rules — BES
+# 2. Frontend Architecture & Design Rules — TenArm
 
 These rules govern all React/TypeScript code in the `bes-frontend/` Nx monorepo.
 
 ## 1. Monorepo Structure & Component Registry
-- **Shell App**: `apps/shell/` is the entry point. It MUST NOT contain module-specific business UI.
-- **Module Libraries**: Each module's UI lives in `libs/<module>/`. 
-- **Shared UI**: Base components and design tokens MUST come from `libs/shared-ui/` (`@bes/shared-ui`).
-- **ComponentRegistry**: Modules dynamically register their components in the Shell via `ComponentRegistry.register()` (e.g., `Route_FinanceMain`, `Widget_FinanceSummary`) during `init<Module>Module()`.
+- **Shell App**: `apps/shell/` is the entry point. It handles auth, navigation, sidebar, and route dispatch. It MUST NOT contain flow-specific or data-hub-specific business UI.
+- **Library Organization**:
+  - `libs/shared-ui/` (`@tenarm/shared-ui`) — Design tokens, base components, registry, utilities.
+  - `libs/flows/<flow-id>/` — Flow-specific page components (landing, step views).
+  - `libs/data-hub/<entity>/` — Data Hub entity pages (grid + detail panel).
+  - `libs/settings/` — Settings and pipeline editor.
+  - `libs/dashboard/` — Home dashboard.
+- **ComponentRegistry**: Flows and Data Hub pages dynamically register their components in the Shell via `ComponentRegistry.registerLazy()` during module initialization.
+  - Flow pages register as: `Flow_<FlowId>` (e.g., `Flow_Sell`, `Flow_Buy`)
+  - Data Hub pages register as: `DataHub_<Entity>` (e.g., `DataHub_Customers`, `DataHub_Products`)
+  - Dashboard widgets register as: `Widget_<Name>` (e.g., `Widget_SellMetrics`)
 
-## 2. Process Transparency & Workflow
-- **Encapsulated Layering (Z-Index)**: Stacking layers are managed internally by `@bes/shared-ui` components. Custom modules MUST NOT hardcode or override `z-index` properties manually, ensuring uniform layer behavior. Standard stacking indices:
-  - **Dynamic Approval / Upgrade Modals**: `9999`
-  - **Floating Process Pipeline**: `9990`
-  - **AI Floating Window**: `9985`
-  - **AI Capsule Button**: `9984`
-  - **Sliding Drawers**: `9980`
-  - **Base UI Elements**: `<9980`
-- **Macro Process Pipeline (`FloatingProcessPipeline`)**: Glassmorphic vertical stepper overlay loaded dynamically on demand. It is cached in `sessionStorage` (keyed by process ID) to enable immediate first paint and avoid layout shifting. It is hydrated live via Server-Sent Events (SSE) `/api/v1/notifications/stream` connection. Visual states must progress through: *Pending*, *Active*, *Waiting Approval*, *Complete*, and *Failed*.
-- **Micro Historical Logs (`Timeline`)**: A detailed chronological history feed rendered under a secondary "History" tab inside the side drawers or panels to preserve context.
-- **Approval Registry Modals**: Custom verification, override, or approval forms must be registered dynamically in the central `ComponentRegistry` to bind onto specific process pipeline steps.
-- Pending/Draft actions must surface on the Home Dashboard.
+## 2. Warm Professional Design System
 
-## 3. UI Degradation, Subscription Controls & The Money Rule
-- **Graceful Degradation**: Modules indicated as `READONLY_EXTENSIONS` from `/api/v1/bootstrap` must seamlessly degrade to read-only UI states without crashing.
-- **Subscription Tier UI Control & Locks**:
-  - Instead of completely hiding unlicensed premium modules or premium sub-features from users, render a premium lock indicator 🔒 next to their menu items, page tabs, or button actions to present a premium trials experience and drive package upsells.
-  - Clicking locked features must open an attractive, premium-styled "Upgrade Plan" modal/overlay card listing package options, rather than rendering an empty white page or crashing.
-- **Money Rule**: Currency and high-precision numbers MUST use `decimal.js` or `big.js` (4 decimal places matching backend).
+TenArm's visual identity is **Warm Professional** — inspired by Stripe Dashboard, Notion, and Linear. Premium feel through warmth, not coldness.
 
-## 4. State Management
-- **Global State**: Use **Zustand** for global state (auth, session, navigation), stored in `apps/shell/src/store/`. NEVER use React Context for global state.
-- **Local State**: Module-specific state stays within the module library.
+### Design Tokens (Mandatory)
+All components MUST use CSS custom properties. Hard-coded hex values are FORBIDDEN in component code.
 
-## 5. Security, API Integration & RBAC
+```css
+/* Brand */
+--wp-primary: #1a1a2e;              /* Deep ink */
+--wp-accent: #e07a5f;               /* Terracotta */
+--wp-accent-muted: rgba(224, 122, 95, 0.1);
+
+/* Warm Neutrals (stone, not gray) */
+--wp-stone-50 through --wp-stone-900
+
+/* Surfaces */
+--wp-surface-base: #fafaf9;         /* Warm white */
+--wp-surface-card: #ffffff;
+--wp-surface-sidebar: #fafaf9;
+
+/* Typography */
+--wp-font-display: 'Outfit', system-ui;      /* Headings */
+--wp-font-body: 'Inter', system-ui;          /* Body */
+
+/* Motion */
+--wp-motion-enter: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+--wp-motion-exit: 150ms cubic-bezier(0.4, 0, 1, 1);
+--wp-motion-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+```
+
+### Design Identity Rules
+- **Never cold**: Use stone/warm-gray scale, not blue-gray/slate. Background is warm white `#fafaf9`, not cold `#f8fafc`.
+- **Accent sparingly**: Terracotta (`--wp-accent`) for interactive elements, focus rings, active states, and primary CTAs. Not everywhere.
+- **Outfit for display**: Headings, flow names, metric labels use the `Outfit` font. Body text uses `Inter`.
+- **Warm shadows**: Shadow colors use warm tint `rgba(28, 25, 23, ...)`, not cold blue.
+- **Focus glow**: Focus rings use terracotta glow (`--wp-shadow-glow`), not generic browser blue.
+- **Motion is purposeful**: Use exactly 3 motion primitives (enter, exit, spring). No arbitrary `transition: all 0.3s`.
+
+## 3. Flow-Centric Navigation (see Rule 3 for details)
+- **Sidebar**: Home + My Tasks at top, then three sections — WORKFLOWS, DATA HUB, SYSTEM. No nested sub-items.
+- **My Tasks**: Cross-flow inbox showing pending tasks for the current user. Badge count on sidebar item. Clicking a task navigates to the flow step view.
+- **Flow Landing Pages**: Every flow entry point shows pending tasks for this flow + recent activity + "Start New [Flow]" CTA + KPI metrics.
+- **Flow Step Views**: Horizontal FlowStepper progress bar + step content area + Previous/Next navigation.
+- **Data Hub Pages**: DataTable + DetailPanel pattern. Consistent across all entities.
+- **Encapsulated Layering (Z-Index)**: Stacking layers managed by `@tenarm/shared-ui`. Custom code MUST NOT hardcode z-index:
+  - **Upgrade Modals / Command Palette**: `9999`
+  - **Flow Pipeline Overlay**: `9990`
+  - **Detail Panels / Drawers**: `9980`
+  - **Toasts / Notifications**: `9970`
+  - **Base UI Elements**: `<9970`
+
+## 4. Core Component Requirements
+
+Every TenArm build MUST use these shared components. Building one-off alternatives is FORBIDDEN.
+
+| Component | Location | Purpose |
+|:---|:---|:---|
+| **DataTable** | `@tenarm/shared-ui` | Primary data grid. Sort, filter, search, paginate, row selection, keyboard nav. Every Data Hub page uses this. |
+| **DetailPanel** | `@tenarm/shared-ui` | Slide-over panel for entity details. Tabs: Overview, Transactions, Timeline. Every row-click uses this. |
+| **FlowStepper** | `@tenarm/shared-ui` | Horizontal progress bar showing flow steps. Visual states: pending, active, completed, skipped, failed. |
+| **FormSection** | `@tenarm/shared-ui` | Declarative form groups with labels, validation, error messages, and progressive disclosure. Max 5-7 fields per section. |
+| **CommandPalette** | `@tenarm/shared-ui` | Cmd+K global search. Searches flows, entities, settings. Keyboard-driven. |
+| **StatusChip** | `@tenarm/shared-ui` | Visual status badge. Predefined states: Draft, Active, Confirmed, Shipped, Completed, Overdue, On Hold, Cancelled. |
+| **MetricCard** | `@tenarm/shared-ui` | Dashboard KPI card: value, label, trend indicator, optional sparkline. |
+| **Toast** | `@tenarm/shared-ui` | Notification toasts. Success, error, warning, info. Auto-dismiss. Stacks. |
+| **EmptyState** | `@tenarm/shared-ui` | Illustrated empty state for pages with no data. Includes a CTA to create the first record. |
+| **TaskCard** | `@tenarm/shared-ui` | Task inbox card showing: flow name, step, entity reference, assigned time, priority badge. Click navigates to step view. |
+| **CommentThread** | `@tenarm/shared-ui` | Threaded comments with @mentions, internal/external toggle, edit history. Used in DetailPanel and step views. |
+| **FileUpload** | `@tenarm/shared-ui` | Drag-and-drop file upload zone with progress, preview, and category tagging. Used in flow steps and DetailPanel. |
+| **BulkActionBar** | `@tenarm/shared-ui` | Floating action bar shown when DataTable rows are selected. Shows count + available bulk actions. |
+| **UpgradeGateOverlay** | `@tenarm/shared-ui` | Premium upsell overlay for locked flows/features. Tier comparison + upgrade CTA. |
+| **PipelineEditor** | `@tenarm/shared-ui` | Drag-and-drop visual editor for flow pipeline customization. Used in Settings → Pipelines. |
+
+## 5. UI Degradation & Subscription Controls
+- **Graceful Degradation**: Unlicensed flows degrade to locked state with 🔒 indicator, not hidden.
+- **Upgrade Gate**: Clicking a locked flow opens `UpgradeGateOverlay` — never a blank page or crash.
+- **Read-Only Mode**: Flows in read-only mode disable form inputs and hide action buttons while preserving data visibility.
+- **Money Rule**: Currency and high-precision numbers MUST use `decimal.js` (4 decimal places matching backend). NEVER native floats.
+
+## 6. Print, Export & Document Generation
+- **Print Action**: Every entity detail view MUST have a "Print" action that generates a clean, print-optimized layout via `@media print` CSS or a server-rendered PDF.
+- **PDF Export**: Business documents (invoices, POs, quotes, delivery notes) MUST support PDF export. PDFs are generated server-side via a template engine and returned as downloadable attachments.
+- **Email Action**: Documents that are sent externally (POs to suppliers, invoices to customers) MUST have a "Send via Email" action that attaches the generated PDF.
+- **Batch Export**: When bulk rows are selected in a DataTable, an "Export" action generates a combined PDF or CSV download.
+- **Template System**: PDF templates are per-entity-type and customizable in Settings. Templates use the tenant's logo, colors, and address from Company Profile.
+
+## 7. Auto-Save & Draft Behavior
+- **Auto-Save**: All form views in flow steps auto-save to the backend every 30 seconds (debounced). Visual indicator: small "Saved ✓" text near the form header that fades after 2 seconds.
+- **Draft Recovery**: On page load, check for unsaved drafts. If found, show a subtle banner: "You have an unsaved draft from [date]. [Resume] [Discard]"
+- **Offline Resilience**: If auto-save fails (network error), queue saves locally in `localStorage` and retry on reconnection. Show a warning Toast: "Changes saved locally — will sync when online."
+
+## 8. State Management
+- **Global State**: Use **Zustand** for global state (auth, session, active flow, navigation), stored in `apps/shell/src/store/`. NEVER use React Context for global state.
+- **Flow State**: Each active flow instance maintains its own state (current step, form data, entity IDs) in a Zustand store within the flow library.
+- **Data Hub State**: Entity list filters, pagination, and selected entity are local state within the Data Hub library.
+
+## 9. Security, API Integration & RBAC
 - **API Proxy**: Use Vite proxy. Base URL is `/api/v1`. Include auth token from `useAuthStore` in headers.
-- **RBAC & License Map**:
-  - All permission checking uses `checkPermission()` from `@bes/shared-ui`. Format: `<module>:<resource>:<action>`.
-  - The dynamic sidebar and routing elements are populated using the bootstrap licensing map (`/api/v1/bootstrap`). RBAC constraints check permissions *after* licensing gates are evaluated.
+- **Token Key**: ALWAYS read JWT from `localStorage.getItem('bes_token')`. The canonical key is `'bes_token'`.
+- **RBAC**: All permission checking uses `checkPermission()` from `@tenarm/shared-ui`. Format: `<module>:<resource>:<action>`.
+- **Flow Permissions**: A flow step checks permissions against its `permissions` array in the flow definition. If any permission fails, the step renders as disabled with an explanation.
 - **Dev-Only Features**: Gated behind `import.meta.env.DEV`.
-- **Authentication Flow**: Login -> Stores tokens in localStorage -> Fetches `auth/me` -> Renders shell. Use refresh token on expiry.
 
-## 6. Styling & Component Guidelines
-- **Styling**: Use **vanilla CSS** with CSS custom properties (design tokens from `@bes/shared-ui`). NEVER use inline styles for reusable components. Primary color: `#162867` (`var(--ui-primary)`).
-- **Components**: Functional components only. Use unique, descriptive `id` attributes for testing. Named exports from libraries.
-- **TypeScript**: Strict mode enabled. No `any` types. Use `interface` for props, `type` for unions. Use path aliases (`@bes/finance`).
+## 10. Styling & TypeScript Standards
+- **Styling**: Use **vanilla CSS modules** (`*.module.css`) with CSS custom properties from the design system. NEVER use inline styles for reusable components. NEVER use Tailwind.
+- **Components**: Functional components only. Named exports. Unique `id` attributes for testing.
+- **TypeScript**: Strict mode. No `any`. Use `interface` for props, `type` for unions. Path aliases (`@tenarm/shared-ui`, `@tenarm/flows-sell`).
 
-## 7. UX Laws & Cognitive Load Reductions
-All frontend designs and layouts must apply these behavioral psychology principles:
-- **System-Directed Mental Models**: Standardize navigation, status badges, forms, and workflows across all modules. Keep layouts uniform so a user who learns one module (e.g. Finance) instantly understands how to operate others (e.g. Sales).
-  - **Context-Aware Navigation & Route Matching**: Every sidebar navigation item should map to a dedicated page layout for clarity and focus. Avoid double-nesting major features that already exist as dedicated sidebar links. Tightly-coupled auxiliary settings should be consolidated under unified setup hubs.
-  - **Flat Multi-View Layouts**: When presenting multiple parallel views or sub-features on a single page, prioritize horizontal top-level tabs (`TabGroup`) to pivot between datasets. Avoid embedding redundant vertical navigation lists or nested sidebars inside the main page content area to keep the layout flat and intuitive.
-- **Miller’s Law (Information Chunking)**: Do not overwhelm the user. Chunk forms and metadata into logically clustered groupings or progressive wizard steps of 5-7 elements maximum. Use clean section separators, tabs, or headers.
-- **Fitts's Law for Data Entry**: Primary buttons, input toggles, and dropdown fields must have generous click/tap targets. Position primary action controls (e.g., Save, Submit) predictably and in close physical proximity to the final input fields to minimize cursor travel distance.
-- **Error-Forgiving Design**: Protect users from mistakes. Provide real-time inline input validation, explicit helpers, warning indicators, and undo operations. When actions fail, present friendly explanations showing how to fix it rather than showing a generic error code.
-- **Aesthetic-Usability Effect**: Deliver visually premium, polished interfaces (e.g. cohesive dark/light palettes, Outfit/Inter typography, subtle glassmorphism cards, and smooth micro-animations like bell vibration or badge pulsing). Users perceive beautiful interfaces as more usable and trustworthy.
-- **Density Over Whitespace**: Enterprise software requires data density. Maximize grid visibility and tabular presentation with compact cell paddings, short row heights, and tag chips. Avoid excessive empty space that forces unnecessary scrolling.
-- **Persistent Context**: Never force users to memorize information or jump screens to view details. Use split-screen side drawers, flyout panels, or side-by-side preview panes to show record details, activity logs, or approval steppers alongside the main data grid.
+## 11. UX Laws & Cognitive Load
+- **Flow-Centric Mental Model**: Users think in workflows ("I want to sell"), not in modules ("I need the Sales module"). The sidebar, navigation, and page structure must reinforce this mental model.
+- **Miller's Law**: Max 5-7 fields per form section. Use progressive disclosure for advanced options.
+- **Fitts's Law**: Primary CTAs are large, prominent, and close to the user's focus area. "Next Step →" is always bottom-right.
+- **Error-Forgiving Design**: Inline validation on blur. Friendly error messages. Undo support where possible.
+- **Density Over Whitespace**: Data tables are compact. Minimal padding. Tag chips for status. Enterprise users need to see data, not empty space.
+- **Persistent Context**: DetailPanel stays open alongside DataTable. Flow progress bar stays visible while working on steps. Never force context switches.
 
-## 8. Beginner-Friendly Frontend Development
-- **Clear File Layout**: Group components logically within module subdirectories (e.g. components, hooks, stores).
-- **Simple Abstractions**: Avoid over-complex TypeScript generics, custom hooks wrapper chains, or deep nesting of components. Write straightforward functional components with readable variables and inline comments explaining state flows.
-- **Storybook / Isolated Testing**: Build shared UI components in isolation to let beginner developer peers view and understand usage examples without launching the full backend server.
+## 12. Notification Integration
+- **Real-Time Bell**: Shell header notification bell subscribed to `/api/v1/notifications/stream` SSE.
+- **Flow-Aware Routing**: Notification payloads include `flow_id` and `entity_id`. Clicking a notification navigates to the flow step or Data Hub entity.
+- **Micro-Interactions**: Bell vibration on new notification. Badge pulse on unread count increment.
 
-## 9. Notification Integration
-- **Real-Time Notification Bell**: The global shell header must include an active Notification Bell component. It subscribes to `/api/v1/notifications/stream` over Server-Sent Events (SSE) using the user's active JWT bearer token. It manages a local list of recent notifications and an unread count.
-- **Micro-interactions & UX Feedback**: Apply the Aesthetic-Usability Effect with subtle animations. When a new notification arrives via SSE:
-  - The bell icon must perform a subtle vibration/shake animation.
-  - The unread badge counter must pulse and increment dynamically.
-- **Metadata-Driven Redirection (Dynamic Routing)**: Notification payloads should include routing metadata (e.g. `{"target_route": "/sales/invoices", "entity_id": "123-456"}`). Clicking a notification must redirect the user to the route and automatically open the detail drawer or flyout panel for the specific entity, maintaining persistent context.
-- **Settings & Channel Licensing Lock**: In the Notification Rules configuration page:
-  - Basic-tier tenants cannot activate premium channels (e.g., `EMAIL`).
-  - Next to premium channel toggle options, render a lock icon `🔒`.
-  - Clicking a locked notification channel option must launch the central `UpgradeGateOverlay` listing packages instead of failing or displaying a blank screen.
+## 13. Error Boundaries
+- **Flow-Level Boundaries**: Every flow library MUST wrap its root in an `ErrorBoundary`.
+- **Graceful Fallback**: User-friendly fallback with "Retry" option. NEVER blank screen or raw stack trace.
+- **Error Reporting**: Log error with flow ID, step ID, and route context.
 
+## 14. Accessibility (a11y)
+- **Keyboard Navigation**: All interactive elements operable via keyboard (Tab, Enter, Escape, Arrow keys).
+- **Labels**: All form inputs MUST have `<label>` or `aria-label`.
+- **Color Contrast**: WCAG 2.1 AA (4.5:1 normal text, 3:1 large text).
+- **Focus Management**: Manage focus on panel/modal open/close and flow step transitions.
+- **Live Regions**: Use `aria-live` for dynamic status changes (flow transitions, validation, loading).
 
+## 15. Beginner-Friendly Development
+- **Clear File Layout**: Group components within flow/data-hub subdirectories (components/, hooks/, stores/).
+- **Simple Abstractions**: No over-complex generics or deep component nesting. Readable code with inline comments.
+- **Showcase App**: Build shared UI components in isolation in `apps/showcase/` for visual documentation.

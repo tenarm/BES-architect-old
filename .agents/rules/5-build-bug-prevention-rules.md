@@ -3,7 +3,7 @@ trigger: always_on
 description: Post-build bug prevention guidelines and registry keys to avoid regressions during backend, frontend, database, or config development.
 ---
 
-# 5. Build Bug Prevention Rules — BES
+# 5. Build Bug Prevention Rules — TenArm
 
 These rules are compiled post-build prevention rules that all agents MUST read and strictly adhere to during development (backend, frontend, config, database) to avoid recurring bugs and regressions.
 
@@ -20,5 +20,10 @@ These rules are compiled post-build prevention rules that all agents MUST read a
 
 ## 3. Core-Extension Service Structuring (Backend)
 - **[Backend] Preserve Boilerplate Imports**: Before fully overwriting services or repositories in a boilerplate extension, verify if the router or other components import any legacy/dummy logic, and ensure those imports and functions are preserved or safely deprecated to prevent `ImportErrors` during application boot.
+
+## 4. Flow Architecture (Frontend)
+- **[Frontend] Flow vs Data Hub Routing**: Flow pages register as `Flow_<FlowId>` and Data Hub pages as `DataHub_<Entity>` in the ComponentRegistry. Never mix these naming conventions — the shell dispatches based on these prefixes.
+- **[Frontend] Design Token Usage**: ALWAYS use `--wp-*` CSS custom properties from the Warm Professional design system. NEVER hardcode hex colors, font names, or shadow values in component code. The old `--ui-*` tokens are deprecated.
+- **[Frontend] FlowStepper State**: The FlowStepper component tracks step states (pending, active, completed, skipped, failed). Never manipulate DOM classes directly — always update via the FlowStepper's state prop.
 
 

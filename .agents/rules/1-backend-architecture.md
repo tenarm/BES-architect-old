@@ -1,9 +1,9 @@
 ---
 trigger: always_on
-description: Technical architecture, Multi-Tenancy, DB schemas, transaction boundary, and security rules for all Python/FastAPI backend files in the bes-backend/ directory.
+description: Technical architecture, Multi-Tenancy, DB schemas, transaction boundary, flow APIs, and security rules for all Python/FastAPI backend files in the bes-backend/ directory.
 ---
 
-# 1. Backend Architecture & Security Rules — BES
+# 1. Backend Architecture & Security Rules — TenArm
 
 These rules govern all Python/FastAPI code and architectural patterns in the `bes-backend/` directory.
 
@@ -57,13 +57,15 @@ When an extension module scales up with multiple sub-features or distinct busine
 - Modules communicate ONLY through the asynchronous **Event Bus** (`core.events`).
 - Standard extension modules MUST NOT directly import or call another extension module's or client-specific instance's code.
 
-## 7. Modular Process Pipeline Definitions
-- **Assessment Requirement**: When specifying or planning new functionalities, you MUST check if a multi-step, approval-driven, or asynchronous process pipeline is required (e.g., employee exit clearance). Direct synchronous changes (e.g., GL entry creation updating the COA) should be distinguished from multi-layered pipelines.
-- **Process Schema Files**: Every extension module that implements standard multi-step processes or pipelines MUST specify them inside `extensions/<module_name>/<module_name>/process_definitions/<module_name>.json`.
-- **Dynamic Aggregation & Self-Healing Filtering**: The core engine (`core/core/processes.py`) dynamically scans all active extension directories for `process_definitions/*.json` on boot, validating their structure against strict **Pydantic** models. 
-  - To handle licensing bounds, any step belonging to an unlicensed module/feature MUST define `requiredModule` or `requiredFeature` in the step schema.
-  - The backend dynamically filters out these unlicensed steps and recursively rewires their dependencies (`dependsOn`) to keep the pipeline intact (Self-Healing).
-- **API Exposing**: Process schemas are exposed to the frontend via the `GET /api/v1/audit/processes` router (filterable by `?module={module_name}`).
+## 7. Flow Pipeline Definitions
+- **Flow-First Model**: TenArm organizes business processes as Flows (see Rule 3). Each flow has a default pipeline of steps that can be customized per-tenant.
+- **Flow Definition Files**: Standard flow pipelines are defined in `features-plan/flows/<flow_id>/flow-definition.json`. The core engine loads and validates these on boot.
+- **Tenant Pipeline Overrides**: Per-tenant customizations (added steps, skipped steps, reordered steps) are stored in the `flow_pipeline_overrides` database table and merged at runtime with the default pipeline.
+- **Flow API**: The core engine exposes flow definitions and pipeline resolution via:
+  - `GET /api/v1/flows` — list all available flows with their resolved pipelines
+  - `GET /api/v1/flows/{flow_id}` — get a specific flow's resolved pipeline
+  - `PUT /api/v1/flows/{flow_id}/pipeline` — save tenant pipeline customizations
+- **Backward Compatibility**: Existing `process_definitions/` JSON files in extensions are still scanned and aggregated via `core/core/processes.py` for legacy process transparency views. New flows should use the flow definition format.
 
 ## 8. Subscription Packaging & Tier Licensing
 - **Tier Configuration (`core/core/packages.json`)**: Feature scopes are defined under three tiered offerings: **Basic**, **Pro**, and **Premium**.
@@ -89,7 +91,6 @@ When an extension module scales up with multiple sub-features or distinct busine
 ## 11. Error-Forgiving API Design
 - **Informative Exceptions**: Do not crash on bad user input or licensing failures. APIs must catch expected errors (e.g. database constraints, validation errors, licensing limits) and translate them into clear, human-readable error messages via `StandardResponse` or `HTTPException`.
 - **Validation Helpers**: Leverage Pydantic's descriptive validation errors to highlight exactly which fields failed validation, providing actionable feedback to the caller.
-- **Soft Deletion**: Always enforce soft deletes via `is_deleted = True` for models inheriting `BESBase` to prevent permanent, accidental data loss.
 
 ## 12. Import Ordering
 1. Standard library (`os`, `uuid`, `datetime`, `decimal`)
@@ -126,7 +127,7 @@ To ensure the business logic layer (`services.py`) remains decoupling-ready, mai
   - Services must be logically layered to prevent circular dependencies within extension modules:
     - **Leaf Services**: Handle CRUD and basic invariants for a single specific entity (e.g., `CustomerService`). They never import or reference other services.
     - **Composite Services**: Orchestrate workflows across multiple leaf services or modules (e.g., `OrderProcessingService` calling `CustomerService` and `InventoryService`).
-  - Cross-module business reactions must always be decoupled using the asynchronous **Event Bus** (`core.events`).
+  - Cross-module business reactions must always be decoupled via the Event Bus (see §6).
 
 - **Mathematical Calculation & Rounding Safeties**:
   - All mathematical operations involving currency, prices, or ledger totals MUST use Python's `decimal` library.
@@ -143,6 +144,74 @@ To ensure the business logic layer (`services.py`) remains decoupling-ready, mai
   - Status updates must be checked against a strict, valid transition matrix. Avoid direct/arbitrary status mutations.
   - Atomic side effects associated with a transition (e.g., locking inventory stock upon moving to `Fulfilled` or posting immutable journals upon moving to `Invoiced`) must execute synchronously within the same database transaction.
 
+## 15. Database Migration Strategy
+- **Development Mode**: Use `SQLModel.metadata.create_all()` in `lifespan.py` for rapid iteration during development.
+- **Production Mode**: Use Alembic for all schema changes. NEVER use auto-create in production.
+- **Migration Naming**: `YYYYMMDD_HHMM_<description>.py` (e.g., `20260528_1430_add_sales_order_table.py`).
+- **Reversibility**: All migrations MUST include both `upgrade()` and `downgrade()` functions.
+- **Data Migrations**: Separate schema migrations from data migrations. Data migrations must be idempotent.
 
+## 16. Logging & Observability
+- **Structured Logging**: Use Python `structlog` for JSON-structured log output.
+- **Log Levels**: `DEBUG` (dev-only detail), `INFO` (request lifecycle), `WARNING` (degraded operations), `ERROR` (failures requiring attention), `CRITICAL` (data integrity risks).
+- **PII Protection**: NEVER log passwords, tokens, bank details, or personal identifiers. Mask sensitive fields in log output.
+- **Correlation**: All service operations MUST propagate `correlation_id` (from `X-Request-ID` header) through log context for end-to-end traceability.
+- **Request Logging**: Log request method, path, status code, and duration for all API calls at `INFO` level.
 
+## 17. Testing Requirements
+- **Directory Structure**: Every extension MUST have a `tests/` directory with `conftest.py` inheriting from `core/tests/conftest.py`.
+- **Minimum Coverage**: Unit tests for all service methods. Integration tests for all API routes. Financial calculations MUST have test cases with known expected values and 4-decimal precision assertions.
+- **Async Testing**: Use `pytest-asyncio` for async tests. Use `httpx.AsyncClient` with `ASGITransport` for API integration tests.
+- **Isolation**: Tests MUST use in-memory SQLite or isolated test databases. NEVER test against shared/production databases.
+- **Naming**: Test files: `test_<entity>.py`. Test functions: `test_<action>_<scenario>` (e.g., `test_create_order_with_invalid_items`).
 
+## 18. Flow API Standards
+- **Flow Step Events**: Every flow step transition MUST emit a standardized event in the format `{FLOW}_{STEP}_{ACTION}` (e.g., `SELL_ORDER_CONFIRMED`, `BUY_GOODS_RECEIVED`). These events are the bridge between frontend flow orchestration and backend cross-module side effects.
+- **Step Validation API**: Each flow step's backend API endpoint MUST validate required fields defined in the step schema before allowing the transition. Return `422 Unprocessable Entity` with field-level errors if validation fails.
+- **Flow Status Tracking**: Entities that participate in flows MUST have a `status` field that maps to the flow's step progression (e.g., `draft`, `confirmed`, `shipped`, `invoiced`). Status transitions are enforced by the service layer's state machine (see §14).
+- **Cross-Module Side Effects**: When a flow step in module A triggers work in module B (e.g., "Confirm Order" in sales triggers inventory reservation), the side effect MUST happen via the Event Bus after commit (see §14), never via direct import.
+
+## 19. Core Shared Services
+
+The following services live in `core/` because they are used by ALL extensions:
+
+### Attachment Service (`core.attachments`)
+- **API**: `POST /api/v1/attachments/upload` (multipart form), `GET /api/v1/attachments/{entity_type}/{entity_id}`, `DELETE /api/v1/attachments/{id}` (soft delete).
+- **Storage**: Files stored under `storage/<tenant_id>/<entity_type>/<entity_id>/`. Storage backend is pluggable (local filesystem for dev, S3/GCS for production).
+- **Validation**: Max 10MB per file. Allowed types: PDF, PNG, JPG, WEBP, XLSX, CSV. Reject executables.
+- **Tenant Isolation**: Files are scoped by `subsidiary_id`. A tenant cannot access another tenant's files.
+
+### Comment Service (`core.comments`)
+- **API**: `POST /api/v1/comments`, `GET /api/v1/comments/{entity_type}/{entity_id}`, `PATCH /api/v1/comments/{id}`.
+- **@Mentions**: When a comment includes `@user_id`, emit a `COMMENT_MENTION` event that triggers an in-app notification.
+- **Audit**: Comments are append-only. Edits create a versioned history. No physical deletion.
+
+### Number Sequence Service (`core.sequences`)
+- **API**: Internal service, not exposed as REST. Used by extension services: `await sequence_service.next_number(session, entity_type)`.
+- **Concurrency**: Uses `SELECT FOR UPDATE` to prevent duplicate numbers under concurrent requests.
+- **Configuration**: Prefix, pattern, and reset frequency are configurable via Settings API.
+- **Gap-Free**: Cancelled entities retain their number. Numbers are never reused or recycled.
+
+## 20. Bulk Operation Pattern
+
+All extensions that expose list endpoints SHOULD support bulk operations:
+
+- **Endpoint**: `POST /api/v1/<module>/<entity>/bulk`
+- **Request Body**: `{ "action": "approve", "ids": ["uuid1", "uuid2", ...] }`
+- **Max Batch Size**: 100 items per request. Enforced by request validation.
+- **Response**: `{ "succeeded": [{ "id": "uuid1" }], "failed": [{ "id": "uuid2", "error": "Invalid status transition" }] }`
+- **Transaction Strategy**: Each item in the batch is processed in its own sub-transaction. One failure does not roll back the others.
+- **Events**: Bulk operations emit ONE aggregate event (e.g., `SELL_INVOICES_BULK_SENT`), not per-item events.
+- **Permission**: Bulk endpoints require the same permission as the single-item action (e.g., `sales:orders:write` for bulk approve).
+- **Audit**: Each individual item records its own audit trail entry, even when processed in bulk.
+
+## 21. Document Generation
+
+Server-side document generation for business documents (invoices, POs, quotes, delivery notes):
+
+- **Template Engine**: Use Jinja2 templates rendered to HTML, then converted to PDF via a lightweight library (e.g., `weasyprint` or `reportlab`).
+- **Template Storage**: Default templates ship in `core/templates/documents/`. Tenant-specific templates override defaults and are stored in the database.
+- **Template Variables**: Templates receive the full entity data (including nested relationships) as context. Standard variables: `{{ company.name }}`, `{{ entity.ref_number }}`, `{{ entity.line_items }}`, `{{ entity.total_amount }}`.
+- **API**: `GET /api/v1/<module>/<entity>/{id}/pdf` — returns the generated PDF as a binary response with `Content-Type: application/pdf`.
+- **Email Integration**: `POST /api/v1/<module>/<entity>/{id}/send` — generates PDF and sends it to the entity's associated contact email. Requires `<module>:<entity>:send` permission.
+- **Caching**: Generated PDFs are cached as attachments (entity_attachments) so regeneration only happens when the entity is modified.

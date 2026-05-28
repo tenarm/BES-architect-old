@@ -173,16 +173,29 @@ describe('[ModuleName]HomePage', () => {
 
 ### Step 4: Register in the Shell
 
-Update `apps/shell/src/main.tsx`:
+> [!CAUTION]
+> Per Rule 5 (Build Bug Prevention), you MUST do both of the following or the module will be invisible in the sidebar.
+
+#### 4a. Add the module initializer to `apps/shell/src/store/auth-store.ts`:
+
+Find the `initializeModules` function and add your module's initializer:
 
 ```typescript
-// apps/shell/src/main.tsx
+// apps/shell/src/store/auth-store.ts
 import { init[ModuleName]Module } from '@bes/[module-name]';
 
-// ... other imports
-
-// Initialize modules alongside existing ones
+// Inside initializeModules():
 init[ModuleName]Module();
+```
+
+#### 4b. Add the module key to `allModulesList` in `apps/shell/src/hooks/use-shell.ts`:
+
+```typescript
+// apps/shell/src/hooks/use-shell.ts
+const allModulesList = [
+  // ... existing modules
+  '[Module Display Name]',  // Must match RESOURCE_NAMES key
+];
 ```
 
 ### Step 5: Add Icons and Configuration
