@@ -1,6 +1,6 @@
 # Response Envelope & Exception Management
 
-This document details the architecture and mechanisms used by TenArm to unify API response formats and bridge business logic (Domain layer) with HTTP presentation boundaries (Web layer).
+This document details the architecture and mechanisms used by Bes to unify API response formats and bridge business logic (Domain layer) with HTTP presentation boundaries (Web layer).
 
 ---
 
@@ -36,7 +36,7 @@ A global exception mapper catches these domain errors at the boundary of the API
 
 ## 2. Core Domain Exceptions (`exceptions.py`)
 
-All domain exceptions inherit from `DomainException` and are isolated in [`exceptions.py`](file:///Users/bvk/BVK_Workspace/BES/tenarm/backend/core/core/exceptions.py):
+All domain exceptions inherit from `DomainException` and are isolated in [`exceptions.py`](file:///Users/bvk/BVK_Workspace/BES/Bes/backend/core/core/exceptions.py):
 
 | Exception Class | Purpose | Transformed HTTP Status | Code Key |
 | :--- | :--- | :--- | :--- |
@@ -72,11 +72,11 @@ To ensure standard format uniformity across the platform (Rule 1 §4), every sin
 
 ## 4. Custom Starlette/FastAPI Exception Mappings
 
-FastAPI registers unified handlers to map exceptions in [`responses.py`](file:///Users/bvk/BVK_Workspace/BES/tenarm/backend/core/core/responses.py). 
+FastAPI registers unified handlers to map exceptions in [`responses.py`](file:///Users/bvk/BVK_Workspace/BES/Bes/backend/core/core/responses.py). 
 
 ### Schema Validation Handling (`RequestValidationError`):
 When a client sends structured JSON that violates a Pydantic schema validation boundary (e.g. sending a string instead of an integer), Starlette raises a `RequestValidationError`. 
-TenArm overrides the default unformatted crash, maps it to a unified `422 Unprocessable Entity` status, and flattens validation trace points for front-end processing:
+Bes overrides the default unformatted crash, maps it to a unified `422 Unprocessable Entity` status, and flattens validation trace points for front-end processing:
 
 ```json
 {

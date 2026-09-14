@@ -1,9 +1,9 @@
 ---
 trigger: always_on
-description: Flow-based planning pipeline, dependency management, build staging, and cross-flow reference registry governing how TenArm features are planned and documented.
+description: Flow-based planning pipeline, dependency management, build staging, and cross-flow reference registry governing how BES features are planned and documented.
 ---
 
-# 4. Planning & Dependency Management Rules — TenArm
+# 4. Planning & Dependency Management Rules — BES
 
 These rules govern how flows are planned, documented, and tracked before implementation.
 

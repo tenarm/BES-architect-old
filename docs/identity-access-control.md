@@ -1,13 +1,13 @@
 # Identity & Access Control (RBAC & JWT Permissions)
 
-TenArm uses a **context-aware, stateless, hybrid-hierarchical Role-Based Access Control (RBAC)** architecture. This document outlines the operational mechanisms, cryptographic optimization strategy, and structural layout of the security layer.
+Bes uses a **context-aware, stateless, hybrid-hierarchical Role-Based Access Control (RBAC)** architecture. This document outlines the operational mechanisms, cryptographic optimization strategy, and structural layout of the security layer.
 
 ---
 
 ## 1. Core Architectural Pillars
 
 ### A. Stateless Authorization via JWT-Encoded Claims
-Traditional systems query the database multiple times on every HTTP request to resolve roles, active permissions, and user profiles. To optimize performance, TenArm encodes resolved permissions directly inside the signed JWT access token.
+Traditional systems query the database multiple times on every HTTP request to resolve roles, active permissions, and user profiles. To optimize performance, Bes encodes resolved permissions directly inside the signed JWT access token.
 * **The Performance Win**: Database queries for roles, merges, and permissions are **completely eliminated** during request-scoped validation, dropping permissions checks to in-memory, local operations.
 * **Compact String Arrays**: Permissions are flattened from nested database JSON models into a compact array of colon-separated strings: `["finance:coa:read", "sales:orders:write"]`.
 * **Superuser Payload Compression**: For superusers, the permissions array is omitted entirely, and a single `"superuser": true` flag is packed instead to minimize token size.
@@ -33,7 +33,7 @@ Each issued token contains structural environment metadata to increase security 
 The security layer is decoupled across specialized, clean modules inside the core backend:
 
 ```
-tenarm/backend/core/core/
+Bes/backend/core/core/
 ├── context.py               # Lightweight thread-safe ContextVars
 ├── auth.py                  # Password cryptography & JWT lifecycle (verify/issue)
 ├── admin_permissions.json   # Seed permissions configuration

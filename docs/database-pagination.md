@@ -1,6 +1,6 @@
 # Database Connection & Pagination Management
 
-This document outlines the architecture, caching strategies, and pagination mechanics used in TenArm to manage database connections and handle request-scoped paginated queries.
+This document outlines the architecture, caching strategies, and pagination mechanics used in Bes to manage database connections and handle request-scoped paginated queries.
 
 ---
 

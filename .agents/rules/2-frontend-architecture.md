@@ -3,14 +3,14 @@ trigger: always_on
 description: Frontend architecture, Warm Professional design system, flow-centric navigation, Data Hub patterns, core component requirements, and UX laws for all React/TypeScript files in the bes-frontend/ Nx monorepo.
 ---
 
-# 2. Frontend Architecture & Design Rules — TenArm
+# 2. Frontend Architecture & Design Rules — BES
 
 These rules govern all React/TypeScript code in the `bes-frontend/` Nx monorepo.
 
 ## 1. Monorepo Structure & Component Registry
 - **Shell App**: `apps/shell/` is the entry point. It handles auth, navigation, sidebar, and route dispatch. It MUST NOT contain flow-specific or data-hub-specific business UI.
 - **Library Organization**:
-  - `libs/shared-ui/` (`@tenarm/shared-ui`) — Design tokens, base components, registry, utilities.
+  - `libs/shared-ui/` (`@BES/shared-ui`) — Design tokens, base components, registry, utilities.
   - `libs/flows/<flow-id>/` — Flow-specific page components (landing, step views).
   - `libs/data-hub/<entity>/` — Data Hub entity pages (grid + detail panel).
   - `libs/settings/` — Settings and pipeline editor.
@@ -22,7 +22,7 @@ These rules govern all React/TypeScript code in the `bes-frontend/` Nx monorepo.
 
 ## 2. Warm Professional Design System
 
-TenArm's visual identity is **Warm Professional** — inspired by Stripe Dashboard, Notion, and Linear. Premium feel through warmth, not coldness.
+BES's visual identity is **Warm Professional** — inspired by Stripe Dashboard, Notion, and Linear. Premium feel through warmth, not coldness.
 
 ### Design Tokens (Mandatory)
 All components MUST use CSS custom properties. Hard-coded hex values are FORBIDDEN in component code.
@@ -65,7 +65,7 @@ All components MUST use CSS custom properties. Hard-coded hex values are FORBIDD
 - **Flow Landing Pages**: Every flow entry point shows pending tasks for this flow + recent activity + "Start New [Flow]" CTA + KPI metrics.
 - **Flow Step Views**: Horizontal FlowStepper progress bar + step content area + Previous/Next navigation.
 - **Data Hub Pages**: DataTable + DetailPanel pattern. Consistent across all entities.
-- **Encapsulated Layering (Z-Index)**: Stacking layers managed by `@tenarm/shared-ui`. Custom code MUST NOT hardcode z-index:
+- **Encapsulated Layering (Z-Index)**: Stacking layers managed by `@BES/shared-ui`. Custom code MUST NOT hardcode z-index:
   - **Upgrade Modals / Command Palette**: `9999`
   - **Flow Pipeline Overlay**: `9990`
   - **Detail Panels / Drawers**: `9980`
@@ -74,25 +74,25 @@ All components MUST use CSS custom properties. Hard-coded hex values are FORBIDD
 
 ## 4. Core Component Requirements
 
-Every TenArm build MUST use these shared components. Building one-off alternatives is FORBIDDEN.
+Every BES build MUST use these shared components. Building one-off alternatives is FORBIDDEN.
 
 | Component | Location | Purpose |
 |:---|:---|:---|
-| **DataTable** | `@tenarm/shared-ui` | Primary data grid. Sort, filter, search, paginate, row selection, keyboard nav. Every Data Hub page uses this. |
-| **DetailPanel** | `@tenarm/shared-ui` | Slide-over panel for entity details. Tabs: Overview, Transactions, Timeline. Every row-click uses this. |
-| **FlowStepper** | `@tenarm/shared-ui` | Horizontal progress bar showing flow steps. Visual states: pending, active, completed, skipped, failed. |
-| **FormSection** | `@tenarm/shared-ui` | Declarative form groups with labels, validation, error messages, and progressive disclosure. Max 5-7 fields per section. |
-| **CommandPalette** | `@tenarm/shared-ui` | Cmd+K global search. Searches flows, entities, settings. Keyboard-driven. |
-| **StatusChip** | `@tenarm/shared-ui` | Visual status badge. Predefined states: Draft, Active, Confirmed, Shipped, Completed, Overdue, On Hold, Cancelled. |
-| **MetricCard** | `@tenarm/shared-ui` | Dashboard KPI card: value, label, trend indicator, optional sparkline. |
-| **Toast** | `@tenarm/shared-ui` | Notification toasts. Success, error, warning, info. Auto-dismiss. Stacks. |
-| **EmptyState** | `@tenarm/shared-ui` | Illustrated empty state for pages with no data. Includes a CTA to create the first record. |
-| **TaskCard** | `@tenarm/shared-ui` | Task inbox card showing: flow name, step, entity reference, assigned time, priority badge. Click navigates to step view. |
-| **CommentThread** | `@tenarm/shared-ui` | Threaded comments with @mentions, internal/external toggle, edit history. Used in DetailPanel and step views. |
-| **FileUpload** | `@tenarm/shared-ui` | Drag-and-drop file upload zone with progress, preview, and category tagging. Used in flow steps and DetailPanel. |
-| **BulkActionBar** | `@tenarm/shared-ui` | Floating action bar shown when DataTable rows are selected. Shows count + available bulk actions. |
-| **UpgradeGateOverlay** | `@tenarm/shared-ui` | Premium upsell overlay for locked flows/features. Tier comparison + upgrade CTA. |
-| **PipelineEditor** | `@tenarm/shared-ui` | Drag-and-drop visual editor for flow pipeline customization. Used in Settings → Pipelines. |
+| **DataTable** | `@BES/shared-ui` | Primary data grid. Sort, filter, search, paginate, row selection, keyboard nav. Every Data Hub page uses this. |
+| **DetailPanel** | `@BES/shared-ui` | Slide-over panel for entity details. Tabs: Overview, Transactions, Timeline. Every row-click uses this. |
+| **FlowStepper** | `@BES/shared-ui` | Horizontal progress bar showing flow steps. Visual states: pending, active, completed, skipped, failed. |
+| **FormSection** | `@BES/shared-ui` | Declarative form groups with labels, validation, error messages, and progressive disclosure. Max 5-7 fields per section. |
+| **CommandPalette** | `@BES/shared-ui` | Cmd+K global search. Searches flows, entities, settings. Keyboard-driven. |
+| **StatusChip** | `@BES/shared-ui` | Visual status badge. Predefined states: Draft, Active, Confirmed, Shipped, Completed, Overdue, On Hold, Cancelled. |
+| **MetricCard** | `@BES/shared-ui` | Dashboard KPI card: value, label, trend indicator, optional sparkline. |
+| **Toast** | `@BES/shared-ui` | Notification toasts. Success, error, warning, info. Auto-dismiss. Stacks. |
+| **EmptyState** | `@BES/shared-ui` | Illustrated empty state for pages with no data. Includes a CTA to create the first record. |
+| **TaskCard** | `@BES/shared-ui` | Task inbox card showing: flow name, step, entity reference, assigned time, priority badge. Click navigates to step view. |
+| **CommentThread** | `@BES/shared-ui` | Threaded comments with @mentions, internal/external toggle, edit history. Used in DetailPanel and step views. |
+| **FileUpload** | `@BES/shared-ui` | Drag-and-drop file upload zone with progress, preview, and category tagging. Used in flow steps and DetailPanel. |
+| **BulkActionBar** | `@BES/shared-ui` | Floating action bar shown when DataTable rows are selected. Shows count + available bulk actions. |
+| **UpgradeGateOverlay** | `@BES/shared-ui` | Premium upsell overlay for locked flows/features. Tier comparison + upgrade CTA. |
+| **PipelineEditor** | `@BES/shared-ui` | Drag-and-drop visual editor for flow pipeline customization. Used in Settings → Pipelines. |
 
 ## 5. UI Degradation & Subscription Controls
 - **Graceful Degradation**: Unlicensed flows degrade to locked state with 🔒 indicator, not hidden.
@@ -120,14 +120,14 @@ Every TenArm build MUST use these shared components. Building one-off alternativ
 ## 9. Security, API Integration & RBAC
 - **API Proxy**: Use Vite proxy. Base URL is `/api/v1`. Include auth token from `useAuthStore` in headers.
 - **Token Key**: ALWAYS read JWT from `localStorage.getItem('bes_token')`. The canonical key is `'bes_token'`.
-- **RBAC**: All permission checking uses `checkPermission()` from `@tenarm/shared-ui`. Format: `<module>:<resource>:<action>`.
+- **RBAC**: All permission checking uses `checkPermission()` from `@BES/shared-ui`. Format: `<module>:<resource>:<action>`.
 - **Flow Permissions**: A flow step checks permissions against its `permissions` array in the flow definition. If any permission fails, the step renders as disabled with an explanation.
 - **Dev-Only Features**: Gated behind `import.meta.env.DEV`.
 
 ## 10. Styling & TypeScript Standards
 - **Styling**: Use **vanilla CSS modules** (`*.module.css`) with CSS custom properties from the design system. NEVER use inline styles for reusable components. NEVER use Tailwind.
 - **Components**: Functional components only. Named exports. Unique `id` attributes for testing.
-- **TypeScript**: Strict mode. No `any`. Use `interface` for props, `type` for unions. Path aliases (`@tenarm/shared-ui`, `@tenarm/flows-sell`).
+- **TypeScript**: Strict mode. No `any`. Use `interface` for props, `type` for unions. Path aliases (`@BES/shared-ui`, `@BES/flows-sell`).
 
 ## 11. UX Laws & Cognitive Load
 - **Flow-Centric Mental Model**: Users think in workflows ("I want to sell"), not in modules ("I need the Sales module"). The sidebar, navigation, and page structure must reinforce this mental model.

@@ -3,7 +3,7 @@ trigger: always_on
 description: Post-build bug prevention guidelines and registry keys to avoid regressions during backend, frontend, database, or config development.
 ---
 
-# 5. Build Bug Prevention Rules — TenArm
+# 5. Build Bug Prevention Rules — BES
 
 These rules are compiled post-build prevention rules that all agents MUST read and strictly adhere to during development (backend, frontend, config, database) to avoid recurring bugs and regressions.
 

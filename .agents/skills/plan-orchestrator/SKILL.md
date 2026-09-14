@@ -1,12 +1,12 @@
 ---
 name: plan-orchestrator
-description: "Orchestrates the complete 5-step flow planning pipeline for TenArm — from flow definition through to build approval."
+description: "Orchestrates the complete 5-step flow planning pipeline for BES — from flow definition through to build approval."
 ---
 
 # Skill: Flow Planning Orchestrator
 
 ## Purpose
-Guides the complete planning pipeline for a new TenArm flow. This is the entry point skill — it coordinates running skills 1→2→3→4 in sequence, collecting user feedback at each stage.
+Guides the complete planning pipeline for a new BES flow. This is the entry point skill — it coordinates running skills 1→2→3→4 in sequence, collecting user feedback at each stage.
 
 ## When to Use
 - Starting the planning process for a new flow

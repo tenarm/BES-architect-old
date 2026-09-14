@@ -1,6 +1,6 @@
 ---
 name: 1-plan-flow
-description: "PLANNING STEP 1: Define a TenArm business flow — its steps, entities, business rules, state machine, and cross-module events."
+description: "PLANNING STEP 1: Define a BES business flow — its steps, entities, business rules, state machine, and cross-module events."
 ---
 
 # Skill: Plan Flow Definition
@@ -10,7 +10,7 @@ Given a flow name and description, produce a comprehensive `1-flow-definition.md
 
 ## When to Use
 - Starting a new flow (e.g., "Sell", "Buy", "Stock")
-- Adding a new workflow to TenArm
+- Adding a new workflow to BES
 - Run this FIRST in the planning pipeline, BEFORE `2-design-flow-ui`
 
 ## Prerequisites

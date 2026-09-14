@@ -1,6 +1,6 @@
 ---
 name: 2-design-flow-ui
-description: "PLANNING STEP 2: Design the complete UI/UX for a TenArm flow — landing page, step screens, Data Hub views, and component mapping."
+description: "PLANNING STEP 2: Design the complete UI/UX for a BES flow — landing page, step screens, Data Hub views, and component mapping."
 ---
 
 # Skill: Design Flow UI/UX
@@ -16,7 +16,7 @@ Given a completed `1-flow-definition.md`, produce a comprehensive `2-flow-ui-des
 - Read the flow's `1-flow-definition.md` (the input for this skill).
 - Read Rule 2 (Frontend Architecture) for Warm Professional design system, component requirements, and UX laws.
 - Read Rule 3 §4-6 for Flow Page Architecture, Data Hub layout, and Sidebar structure.
-- Check `@tenarm/shared-ui` for existing components to reuse (use Graphify or grep).
+- Check `@BES/shared-ui` for existing components to reuse (use Graphify or grep).
 
 ---
 
@@ -122,7 +122,7 @@ For each Data Hub entity this flow feeds:
 - **CTA**: "Start [Flow]" → navigates to flow landing page
 ```
 
-### Step 4: Map Components to @tenarm/shared-ui
+### Step 4: Map Components to @BES/shared-ui
 
 List every component this flow needs and whether it exists:
 

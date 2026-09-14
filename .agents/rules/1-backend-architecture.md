@@ -3,7 +3,7 @@ trigger: always_on
 description: Technical architecture, Multi-Tenancy, DB schemas, transaction boundary, flow APIs, and security rules for all Python/FastAPI backend files in the bes-backend/ directory.
 ---
 
-# 1. Backend Architecture & Security Rules — TenArm
+# 1. Backend Architecture & Security Rules — BES
 
 These rules govern all Python/FastAPI code and architectural patterns in the `bes-backend/` directory.
 
@@ -58,7 +58,7 @@ When an extension module scales up with multiple sub-features or distinct busine
 - Standard extension modules MUST NOT directly import or call another extension module's or client-specific instance's code.
 
 ## 7. Flow Pipeline Definitions
-- **Flow-First Model**: TenArm organizes business processes as Flows (see Rule 3). Each flow has a default pipeline of steps that can be customized per-tenant.
+- **Flow-First Model**: BES organizes business processes as Flows (see Rule 3). Each flow has a default pipeline of steps that can be customized per-tenant.
 - **Flow Definition Files**: Standard flow pipelines are defined in `features-plan/flows/<flow_id>/flow-definition.json`. The core engine loads and validates these on boot.
 - **Tenant Pipeline Overrides**: Per-tenant customizations (added steps, skipped steps, reordered steps) are stored in the `flow_pipeline_overrides` database table and merged at runtime with the default pipeline.
 - **Flow API**: The core engine exposes flow definitions and pipeline resolution via:

@@ -1,6 +1,6 @@
 ---
 name: 5-build-flow
-description: "BUILD STEP: Execute the approved proposed-plan.md — build both backend and frontend for a TenArm flow end-to-end."
+description: "BUILD STEP: Execute the approved proposed-plan.md — build both backend and frontend for a BES flow end-to-end."
 ---
 
 # Skill: Build Flow
@@ -126,7 +126,7 @@ libs/flows/<flow-id>/
 
 **Registration in index.ts**:
 ```typescript
-import { ComponentRegistry } from '@tenarm/shared-ui';
+import { ComponentRegistry } from '@BES/shared-ui';
 
 export function initSellFlow() {
   ComponentRegistry.registerLazy('Flow_Sell', () =>
@@ -146,7 +146,7 @@ Build the landing page with:
 **Rules**:
 - Use `--wp-*` design tokens — no hardcoded colors
 - CSS modules for styling
-- Components from `@tenarm/shared-ui`
+- Components from `@BES/shared-ui`
 - Zustand store for flow state
 
 ### Step 9: Build Frontend — Step Views

@@ -1,17 +1,17 @@
 ---
 trigger: always_on
-description: Flow-first architecture, pipeline customization, step types, Data Hub patterns, and flow-to-module mapping governing TenArm's core business model.
+description: Flow-first architecture, pipeline customization, step types, Data Hub patterns, and flow-to-module mapping governing BES's core business model.
 ---
 
-# 3. Flow Architecture — TenArm
+# 3. Flow Architecture — BES
 
-These rules govern how business flows are defined, structured, customized, and rendered across the TenArm ERP platform.
+These rules govern how business flows are defined, structured, customized, and rendered across the BES ERP platform.
 
 ---
 
 ## 1. Flow-First Business Model
 
-TenArm is a **flow-centric** ERP. Users navigate by **what they want to do** (Sell, Buy, Track Stock), not by **which module contains the data** (Sales, Inventory, Finance).
+BES is a **flow-centric** ERP. Users navigate by **what they want to do** (Sell, Buy, Track Stock), not by **which module contains the data** (Sales, Inventory, Finance).
 
 - **A Flow** is a guided multi-step business process that creates or modifies entities across one or more backend modules.
 - **The Data Hub** is a secondary browsing layer for flat entity views (Customers, Suppliers, Products).
@@ -183,7 +183,7 @@ Clicking a task navigates directly to the flow step view for that entity, pre-lo
 
 ### Pipeline Customization
 
-- **Default Pipeline**: Shipped with TenArm. Defined in `flow_definitions/<flow_id>.json`.
+- **Default Pipeline**: Shipped with BES. Defined in `flow_definitions/<flow_id>.json`.
 - **Tenant Pipeline**: Per-tenant overrides stored in the database (`flow_pipeline_overrides` table). The user's customization is a delta on top of the default.
 - **Pipeline Editor**: A visual drag-and-drop editor in Settings → Pipelines where business owners can:
   - **Add** approval gates, notification steps, automation hooks
@@ -241,8 +241,8 @@ The backend evaluates the entity's data against `approvalRules` to determine the
 
 Not all steps have hardcoded React components. Custom steps added via the Pipeline Editor need to render dynamically:
 
-1. **Standard steps** (shipped with TenArm) have dedicated components in `libs/flows/<flow-id>/steps/`.
-2. **Custom steps** (tenant-added via Pipeline Editor) are rendered by a **GenericStepRenderer** component in `@tenarm/shared-ui`.
+1. **Standard steps** (shipped with BES) have dedicated components in `libs/flows/<flow-id>/steps/`.
+2. **Custom steps** (tenant-added via Pipeline Editor) are rendered by a **GenericStepRenderer** component in `@BES/shared-ui`.
 3. The GenericStepRenderer reads the step's schema (`requiredFields`, `validations`, field types) and builds a form using `FormSection` components dynamically.
 4. **Component override**: If a tenant's client instance needs a fully custom UI for a step, they can register a component in `ComponentRegistry` with key `Step_<flow_id>_<step_id>`. The flow engine checks for a registered override before falling back to GenericStepRenderer.
 
@@ -364,7 +364,7 @@ Clicking a row opens the **DetailPanel** (slide-over from right):
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━
-  TENARM
+  BES
 ━━━━━━━━━━━━━━━━━━━━━━━
  🏠 Home
  📋 My Tasks              ← Cross-flow inbox (pending tasks for current user)

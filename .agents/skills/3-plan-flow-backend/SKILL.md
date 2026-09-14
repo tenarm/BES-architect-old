@@ -1,6 +1,6 @@
 ---
 name: 3-plan-flow-backend
-description: "PLANNING STEP 3: Design the backend implementation for a TenArm flow — models, schemas, services, APIs, events, and cross-module integration."
+description: "PLANNING STEP 3: Design the backend implementation for a BES flow — models, schemas, services, APIs, events, and cross-module integration."
 ---
 
 # Skill: Plan Flow Backend

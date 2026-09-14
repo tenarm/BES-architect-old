@@ -1,6 +1,6 @@
 ---
 name: 4-review-flow
-description: "PLANNING STEP 4: Review all flow planning documents against TenArm rules, verify dependencies, and produce the approved proposed-plan.md."
+description: "PLANNING STEP 4: Review all flow planning documents against BES rules, verify dependencies, and produce the approved proposed-plan.md."
 ---
 
 # Skill: Review Flow Plan
